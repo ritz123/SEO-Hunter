@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   X, ExternalLink, RotateCcw, CheckCircle2, XCircle,
   AlertTriangle, Globe, Smartphone, Lock, Gauge, Clock,
-  Search, Wrench, FileText, Star, Phone, MapPin, Tag, Mail,
+  Search, Wrench, FileText, Star, Phone, MapPin, Tag, Mail, Map,
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { fetchBusiness, fetchAuditHistory, reauditBusiness } from '../../api';
 import { toast } from './Toast';
 import PriorityBadge from './PriorityBadge';
@@ -550,18 +551,22 @@ function ReportTab({ biz, audit }) {
 
 function DetailsTab({ biz }) {
   if (!biz) return null;
+  const [mapOpen, setMapOpen] = useState(false);
   const hasPhone   = !!biz.phone;
   const hasEmail   = !!biz.email;
   const hasAddress = !!biz.address;
   const hasGeo     = !!(biz.lat && biz.lng);
   const contactScore = (hasPhone ? 1 : 0) + (hasEmail ? 1 : 0) + (hasAddress ? 1 : 0) + (hasGeo ? 1 : 0);
 
+  const osmUrl = hasGeo
+    ? `https://www.openstreetmap.org/?mlat=${biz.lat}&mlon=${biz.lng}&zoom=16`
+    : null;
+
   const rows = [
     { label: 'Website',  icon: Globe,  value: biz.website, link: biz.website?.startsWith('http') ? biz.website : biz.website ? 'https://' + biz.website : null },
     { label: 'Phone',    icon: Phone,  value: biz.phone,   link: biz.phone ? `tel:${biz.phone}` : null },
     { label: 'Email',    icon: Mail,   value: biz.email,   link: biz.email ? `mailto:${biz.email}` : null },
     { label: 'Address',  icon: MapPin, value: biz.address },
-    { label: 'Geo-tag',  icon: MapPin, value: (biz.lat && biz.lng) ? `${biz.lat.toFixed(5)}, ${biz.lng.toFixed(5)}` : null },
     { label: 'Category', icon: Tag,    value: biz.category },
     { label: 'Rating',   icon: Star,   value: biz.rating != null ? `${biz.rating} / 5 (${biz.review_count ?? 0} reviews)` : null },
     { label: 'Source',   icon: Search, value: biz.source },
@@ -613,6 +618,63 @@ function DetailsTab({ biz }) {
             </div>
           </div>
         ))}
+
+        {/* Geo-tag row with inline map toggle */}
+        {hasGeo && (
+          <div className="py-2.5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <MapPin size={14} className="text-gray-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-gray-400 uppercase tracking-wide font-medium">Geo-tag</p>
+                <p className="text-sm text-gray-800 font-mono">
+                  {biz.lat.toFixed(5)}, {biz.lng.toFixed(5)}
+                </p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setMapOpen(v => !v)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                    mapOpen
+                      ? 'bg-blue-800 border-blue-800 text-white'
+                      : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Map size={11} />
+                  {mapOpen ? 'Hide map' : 'Show map'}
+                </button>
+                <a
+                  href={osmUrl}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  title="Open in OpenStreetMap"
+                >
+                  <ExternalLink size={11} /> OSM
+                </a>
+              </div>
+            </div>
+
+            {/* Inline Leaflet map */}
+            {mapOpen && (
+              <div className="mt-3 rounded-xl overflow-hidden border border-gray-200" style={{ height: 220 }}>
+                <MapContainer
+                  center={[biz.lat, biz.lng]}
+                  zoom={16}
+                  style={{ height: '100%', width: '100%' }}
+                  scrollWheelZoom={false}
+                  zoomControl={true}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+                  />
+                  <Marker position={[biz.lat, biz.lng]}>
+                    <Popup>{biz.name || 'Business location'}</Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {(biz.gbp_url || biz.yelp_url) && (
