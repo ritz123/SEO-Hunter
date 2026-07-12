@@ -8,6 +8,24 @@
 
 'use strict';
 
+/* ── SVG icon library (no emoji as structural icons) ────────────────────────*/
+const SVG = {
+  search:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+  phone:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.85 12.5 19.79 19.79 0 0 1 1.77 3.88 2 2 0 0 1 3.7 1.72l2.97-.84a2 2 0 0 1 2.69 1.29l1.58 3.7a2 2 0 0 1-.45 2l-1.48 1.23a16 16 0 0 0 6.29 6.29l1.23-1.48a2 2 0 0 1 2-.45l3.7 1.58a2 2 0 0 1 1.29 2.69z"/></svg>`,
+  globe:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  star:     `<svg width="12" height="12" viewBox="0 0 24 24" fill="#d97706" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  copy:     `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  report:   `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  refresh:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
+  mapIcon:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>`,
+  trash:    `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  check:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  xMark:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  warning:  `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  extLink:  `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+  pin:      `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+};
+
 /* ── Global state ───────────────────────────────────────────────────────────*/
 let map, markerLayer;
 let allBusinesses   = [];      // all loaded from API
@@ -15,14 +33,14 @@ let browseFiltered  = [];      // after filters applied
 let browseSorted    = [];      // after sort applied
 let browsePage      = 1;
 const PAGE_SIZE     = 25;
-let browseSort      = { col: 'score', dir: 'desc' };
+let browseSort      = { col: 'priority', dir: 'asc' };  // Priority A first by default
 let activeMapFilter = 'all';
 let selectedBizId   = null;
 let currentLocalityId = null;
 let selectedGeo     = null;
 let suggestTimer    = null;
 let pollTimer       = null;
-let currentView     = 'map';
+let currentView     = 'browse';
 
 const PRIO_COLOR = { A:'#dc2626', B:'#d97706', C:'#16a34a', null:'#9ca3af' };
 const PRIO_LABEL = {
@@ -34,38 +52,43 @@ const PRIO_LABEL = {
 
 /* ── Tab switching ──────────────────────────────────────────────────────────*/
 function switchTab(view) {
+  // Reset sidebar detail when leaving map view
+  if (currentView === 'map' && view !== 'map') {
+    closeSidebarDetail(true /* silent */);
+  }
+
   currentView = view;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`tab-${view}`).classList.add('active');
 
-  const legend    = document.getElementById('map-legend');
-  const histBtn   = document.getElementById('history-toggle-btn');
-  const histPanel = document.getElementById('history-panel');
-
   if (view === 'map') {
-    legend.style.display  = '';
-    histBtn.style.display = '';
-    if (map) map.invalidateSize();
-  } else {
-    legend.style.display    = 'none';
-    histBtn.style.display   = 'none';
-    histPanel.classList.remove('open');
-    if (view === 'browse') {
-      if (!allBusinesses.length) loadAllBusinesses();
-      else { populateBrowseDropdowns(); applyBrowseFilters(); }
-    } else if (view === 'database') {
-      loadDbTab();
-    }
+    ensureMapInit();
+    // Ensure the search panel is open when user visits Discover
+    document.getElementById('search-panel').classList.remove('collapsed');
+    setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 80);
+  } else if (view === 'browse') {
+    if (!allBusinesses.length) loadAllBusinesses();
+    else { populateBrowseDropdowns(); applyBrowseFilters(); }
+  } else if (view === 'database') {
+    loadDbTab();
   }
 }
 
-/* ── Map initialisation ─────────────────────────────────────────────────────*/
-let pinMarker   = null;   // the dropped location pin
-let radiusCircle = null;  // the search-radius circle
+/* ── Map initialisation (lazy — only when Discover tab is first opened) ─────*/
+let pinMarker    = null;   // the dropped location pin
+let radiusCircle = null;   // the search-radius circle
+let mapReady     = false;
+
+function ensureMapInit() {
+  if (mapReady) return;
+  initMap();
+}
 
 function initMap() {
+  if (mapReady) return;
+  mapReady = true;
   map = L.map('map', { zoomControl: true }).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -89,7 +112,7 @@ async function onMapClick(e) {
     const geo = await api('GET', `/api/geocode/reverse?lat=${lat}&lng=${lng}`);
     selectedGeo = { lat, lng, display_name: geo.display_name };
     document.getElementById('inp-locality').value = geo.display_name;
-    toast(`📍 ${geo.display_name}`, '');
+    toast(`Pin set: ${geo.display_name}`, '');
   } catch (_) {
     selectedGeo = { lat, lng, display_name: `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
     document.getElementById('inp-locality').value = selectedGeo.display_name;
@@ -108,9 +131,9 @@ function placePin(lat, lng) {
   // Drop a pulsing pin marker
   const pinIcon = L.divIcon({
     className: '',
-    html: `<div class="map-pin">📍</div>`,
-    iconSize:   [28, 28],
-    iconAnchor: [14, 28],
+    html: `<div class="map-pin"><svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#1e40af"/><circle cx="14" cy="14" r="6" fill="white"/></svg></div>`,
+    iconSize:   [28, 36],
+    iconAnchor: [14, 36],
   });
   pinMarker = L.marker([lat, lng], { icon: pinIcon, zIndexOffset: 1000 })
     .addTo(map)
@@ -186,6 +209,11 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#inp-locality') && !e.target.closest('#suggest-dropdown')) closeSuggest();
 });
 
+/* ── Search panel toggle ────────────────────────────────────────────────────*/
+function toggleSearchPanel() {
+  document.getElementById('search-panel').classList.toggle('collapsed');
+}
+
 /* ── Search ─────────────────────────────────────────────────────────────────*/
 async function startSearch() {
   const localityInput = document.getElementById('inp-locality').value.trim();
@@ -244,7 +272,8 @@ function startPolling(jobId, localityId) {
         hideProgress();
         await loadBusinesses(localityId);
         refreshStats();
-        refreshHistory();
+        // Auto-collapse search form so the results list gets full space
+        document.getElementById('search-panel').classList.add('collapsed');
         toast(`Found ${job.businesses_found}, audited ${job.businesses_audited}`, 'success');
       } else if (job.status === 'failed') {
         clearInterval(pollTimer);
@@ -292,10 +321,9 @@ async function loadBusinesses(localityId) {
 
   renderMapList();
   renderMarkers();
-  if (currentView === 'browse') {
-    populateBrowseDropdowns();
-    applyBrowseFilters();
-  }
+  populateBrowseDropdowns();
+  applyBrowseFilters();
+  refreshClientKPIs();
 }
 
 async function loadAllBusinesses() {
@@ -306,7 +334,32 @@ async function loadAllBusinesses() {
     renderMarkers();
     populateBrowseDropdowns();
     applyBrowseFilters();
+    refreshClientKPIs();
   } catch (_) {}
+}
+
+/* ── Clients tab KPI strip ──────────────────────────────────────────────────*/
+function refreshClientKPIs() {
+  const els = {
+    total:  document.getElementById('kpi-total'),
+    a:      document.getElementById('kpi-a'),
+    b:      document.getElementById('kpi-b'),
+    c:      document.getElementById('kpi-c'),
+    nosite: document.getElementById('kpi-nosite'),
+  };
+  if (!els.total) return;
+
+  const total  = allBusinesses.length;
+  const countA = allBusinesses.filter(b => b.audit?.priority === 'A').length;
+  const countB = allBusinesses.filter(b => b.audit?.priority === 'B').length;
+  const countC = allBusinesses.filter(b => b.audit?.priority === 'C').length;
+  const nosite = allBusinesses.filter(b => !b.website).length;
+
+  els.total.textContent  = total  || '—';
+  els.a.textContent      = countA || '—';
+  els.b.textContent      = countB || '—';
+  els.c.textContent      = countC || '—';
+  els.nosite.textContent = nosite || '—';
 }
 
 /* ── Map sidebar list ───────────────────────────────────────────────────────*/
@@ -329,7 +382,11 @@ function renderMapList() {
   const items = mapFilteredBusinesses();
 
   if (!items.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">🔍</div>No businesses match this filter.</div>`;
+    list.innerHTML = `<div class="empty-state">
+      <svg class="es-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <div class="es-title">No businesses match this filter</div>
+      <div class="es-sub">Try selecting "All" or running a new search.</div>
+    </div>`;
     return;
   }
 
@@ -341,15 +398,17 @@ function renderMapList() {
   });
 
   list.innerHTML = items.map(b => {
-    const prio  = b.audit?.priority ?? null;
-    const score = b.audit?.score ?? '—';
-    const meta  = [b.category, b.address].filter(Boolean).join(' · ').substring(0, 55);
+    const prio    = b.audit?.priority ?? null;
+    const score   = b.audit?.score ?? '—';
+    const meta    = [b.category, b.address].filter(Boolean).join(' · ').substring(0, 55);
+    const topIssue = b.audit?.top_issues?.[0] ?? '';
     return `<div class="biz-item${b.id === selectedBizId ? ' selected' : ''}"
                  onclick="selectBusiness(${b.id})" data-id="${b.id}">
       <div class="prio-badge prio-${prio || 'none'}">${prio || '?'}</div>
       <div class="biz-info">
         <div class="biz-name">${esc(b.name || b.website || '(unnamed)')}</div>
         <div class="biz-meta">${esc(meta)}</div>
+        ${topIssue ? `<div class="biz-issue" style="display:flex;align-items:center;gap:4px">${SVG.warning} ${esc(topIssue)}</div>` : ''}
       </div>
       <div class="biz-score">${score}</div>
     </div>`;
@@ -509,9 +568,28 @@ function renderBrowseTable() {
     `${total} business${total !== 1 ? 'es' : ''}`;
 
   if (!total) {
-    tbody.innerHTML = `<tr><td colspan="10" class="table-empty">
-      ${allBusinesses.length ? 'No businesses match the current filters.' : 'No businesses in the database yet — run a search on the Map tab.'}
-    </td></tr>`;
+    if (!allBusinesses.length) {
+      tbody.innerHTML = `<tr><td colspan="10">
+        <div class="clients-empty">
+          <svg class="clients-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <div class="clients-empty-title">No clients in your database yet</div>
+          <div class="clients-empty-sub">
+            Use <strong>Discover</strong> to search for local businesses and audit their websites.<br>
+            Priority&nbsp;A clients — those with the most outdated sites — appear here first, ready for outreach.
+          </div>
+          <button class="btn btn-primary" style="display:inline-flex;margin-top:4px" onclick="switchTab('map')">
+            Open Discover &rarr;
+          </button>
+        </div>
+      </td></tr>`;
+    } else {
+      tbody.innerHTML = `<tr><td colspan="10" class="table-empty">No clients match the current filters.</td></tr>`;
+    }
     renderPagination(0, 0);
     return;
   }
@@ -523,7 +601,7 @@ function renderBrowseTable() {
     const prio   = b.audit?.priority ?? '';
     const score  = b.audit?.score ?? null;
     const issue  = b.audit?.top_issues?.[0] ?? '';
-    const rating = b.rating ? `⭐ ${b.rating}` : '—';
+    const rating = b.rating ? `<span style="display:inline-flex;align-items:center;gap:3px">${SVG.star} ${b.rating}</span>` : '—';
 
     // Score bar colour
     const barColor = prio === 'A' ? '#dc2626' : prio === 'B' ? '#d97706' : '#16a34a';
@@ -531,16 +609,16 @@ function renderBrowseTable() {
 
     const websiteCell = b.website
       ? `<a class="tbl-link" href="${esc(b.website)}" target="_blank" rel="noopener"
-              onclick="event.stopPropagation()">↗ visit</a>
+              onclick="event.stopPropagation()">${SVG.extLink} visit</a>
          <button class="copy-btn" title="Copy URL"
-                 onclick="event.stopPropagation();copyText('${esc(b.website)}')">⎘</button>`
+                 onclick="event.stopPropagation();copyText('${esc(b.website)}')">${SVG.copy}</button>`
       : `<span style="color:#d1d5db;font-size:11px">none</span>`;
 
     const phoneCell = b.phone
       ? `<a class="tbl-link" href="tel:${esc(b.phone)}"
               onclick="event.stopPropagation()">${esc(b.phone)}</a>
          <button class="copy-btn" title="Copy phone"
-                 onclick="event.stopPropagation();copyText('${esc(b.phone)}')">⎘</button>`
+                 onclick="event.stopPropagation();copyText('${esc(b.phone)}')">${SVG.copy}</button>`
       : `<span style="color:#d1d5db;font-size:11px">—</span>`;
 
     return `<tr onclick="selectBusiness(${b.id})"${b.id === selectedBizId ? ' class="selected"' : ''} data-id="${b.id}">
@@ -563,7 +641,7 @@ function renderBrowseTable() {
           <button class="btn btn-ghost btn-sm" style="padding:3px 7px;font-size:11px"
                   onclick="event.stopPropagation();selectBusiness(${b.id})">Details</button>
           ${b.audit ? `<button class="btn btn-sm report-btn"
-                  onclick="event.stopPropagation();openReport(${b.id})" title="View full audit report">📋 Report</button>` : ''}
+                  onclick="event.stopPropagation();openReport(${b.id})" title="View full audit report">${SVG.report} Report</button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -652,26 +730,13 @@ async function selectBusiness(id) {
   }
 }
 
-function showDetail(biz) {
-  const panel = document.getElementById('detail-panel');
+/* Build the reusable detail body HTML (used by both sidebar and slide-over panel) */
+function buildDetailBodyHTML(biz) {
   const audit = biz.audit;
   const prio  = audit?.priority ?? null;
-
-  document.getElementById('dp-name').textContent = biz.name || biz.website || '(unnamed)';
-  document.getElementById('dp-addr').textContent = biz.address || '';
-
-  const wLink = document.getElementById('dp-website');
-  wLink.href  = biz.website || '#';
-  wLink.style.display = biz.website ? '' : 'none';
-
-  const gLink = document.getElementById('dp-gbp');
-  gLink.href  = biz.gbp_url || '#';
-  gLink.style.display = biz.gbp_url ? '' : 'none';
-
   let html = '';
 
   if (audit) {
-    const color = PRIO_COLOR[prio];
     html += `<div class="detail-section">
       <div class="score-ring">
         <div class="score-number score-${prio}">${audit.score}</div>
@@ -722,32 +787,89 @@ function showDetail(biz) {
     }
   } else {
     html += `<div style="font-size:13px;color:#6b7280;padding:20px 0;text-align:center">
-      No audit data yet.<br>Click <strong>↺ Re-audit</strong>.
+      No audit data yet.<br>Click <strong>Re-audit</strong>.
     </div>`;
   }
 
   html += `<div class="detail-section"><h3>Contact</h3><div class="contact-links">`;
-  if (biz.phone)    html += `<a href="tel:${esc(biz.phone)}">📞 ${esc(biz.phone)}</a>`;
-  if (biz.website)  html += `<a href="${esc(biz.website)}" target="_blank" rel="noopener">🌐 ${esc(biz.website)}</a>`;
-  if (biz.yelp_url) html += `<a href="${esc(biz.yelp_url)}" target="_blank" rel="noopener">⭐ Yelp page</a>`;
+  if (biz.phone)    html += `<a href="tel:${esc(biz.phone)}">${SVG.phone} ${esc(biz.phone)}</a>`;
+  if (biz.website)  html += `<a href="${esc(biz.website)}" target="_blank" rel="noopener">${SVG.globe} ${esc(biz.website)}</a>`;
+  if (biz.yelp_url) html += `<a href="${esc(biz.yelp_url)}" target="_blank" rel="noopener">${SVG.star} Yelp page</a>`;
   if (!biz.phone && !biz.website)
     html += `<span style="color:#9ca3af;font-size:12px">No contact info</span>`;
   html += '</div></div>';
 
   if (biz.rating) {
     html += `<div class="detail-section"><h3>Rating</h3>
-      <span>⭐ ${biz.rating} (${biz.review_count || 0} reviews)</span></div>`;
+      <span style="display:inline-flex;align-items:center;gap:4px">${SVG.star} ${biz.rating} <span style="color:var(--gray-500);font-size:12px">(${biz.review_count || 0} reviews)</span></span></div>`;
   }
 
-  document.getElementById('dp-body').innerHTML = html;
-  panel.classList.add('open');
+  return html;
+}
+
+function showDetail(biz) {
+  const html = buildDetailBodyHTML(biz);
+
+  if (currentView === 'map') {
+    // Show inline in sidebar — map stays full width
+    document.getElementById('sdet-name').textContent = biz.name || biz.website || '(unnamed)';
+    document.getElementById('sdet-addr').textContent = biz.address || '';
+    document.getElementById('sdet-body').innerHTML   = html;
+
+    const wLink = document.getElementById('sdet-website');
+    wLink.href  = biz.website || '#';
+    wLink.style.display = biz.website ? '' : 'none';
+
+    const gLink = document.getElementById('sdet-gbp');
+    gLink.href  = biz.gbp_url || '#';
+    gLink.style.display = biz.gbp_url ? '' : 'none';
+
+    document.getElementById('sdet-report-btn').style.display = biz.audit ? '' : 'none';
+
+    document.getElementById('business-list').style.display    = 'none';
+    document.getElementById('sidebar-filter-bar').style.display = 'none';
+    document.getElementById('sidebar-detail').classList.add('open');
+
+    // Make sure the external slide-over is closed
+    document.getElementById('detail-panel').classList.remove('open');
+  } else {
+    // Browse view: use the right-side slide-over panel
+    document.getElementById('dp-name').textContent = biz.name || biz.website || '(unnamed)';
+    document.getElementById('dp-addr').textContent = biz.address || '';
+    document.getElementById('dp-body').innerHTML   = html;
+
+    const wLink = document.getElementById('dp-website');
+    wLink.href  = biz.website || '#';
+    wLink.style.display = biz.website ? '' : 'none';
+
+    const gLink = document.getElementById('dp-gbp');
+    gLink.href  = biz.gbp_url || '#';
+    gLink.style.display = biz.gbp_url ? '' : 'none';
+
+    document.getElementById('detail-panel').classList.add('open');
+  }
+}
+
+function closeSidebarDetail(silent = false) {
+  document.getElementById('sidebar-detail').classList.remove('open');
+  document.getElementById('business-list').style.display    = '';
+  document.getElementById('sidebar-filter-bar').style.display = '';
+  if (!silent) {
+    selectedBizId = null;
+    document.querySelectorAll('.biz-item').forEach(el => el.classList.remove('selected'));
+  }
 }
 
 function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
+  closeSidebarDetail();
   selectedBizId = null;
   document.querySelectorAll('.biz-item, #biz-tbody tr[data-id]')
     .forEach(el => el.classList.remove('selected'));
+}
+
+function openReportForSelected() {
+  if (selectedBizId) openReport(selectedBizId);
 }
 
 async function reauditSelected() {
@@ -767,28 +889,9 @@ async function reauditSelected() {
   } catch (e) { toast('Re-audit failed: ' + e.message, 'error'); }
 }
 
-/* ── History ────────────────────────────────────────────────────────────────*/
-function toggleHistory() {
-  document.getElementById('history-panel').classList.toggle('open');
-}
-
-async function refreshHistory() {
-  const list = document.getElementById('history-list');
-  try {
-    const localities = await api('GET', '/api/localities');
-    if (!localities.length) {
-      list.innerHTML = `<div style="padding:12px;font-size:12px;color:#9ca3af">No previous searches</div>`;
-      return;
-    }
-    list.innerHTML = localities.map(loc =>
-      `<div class="history-item" onclick="loadLocality(${loc.id})">
-        <div class="hi-name">${esc(loc.name)} · ${esc(loc.category || '')}</div>
-        <div class="hi-count">${loc.business_count}</div>
-        <span class="hi-del" onclick="deleteLocality(event,${loc.id})">✕</span>
-      </div>`
-    ).join('');
-  } catch (_) {}
-}
+/* ── History (panel removed — history is in the Insights tab) ───────────────*/
+function toggleHistory() { /* no-op — history panel removed */ }
+async function refreshHistory() { /* no-op — use Insights tab */ }
 
 async function loadLocality(id) {
   currentLocalityId = id;
@@ -922,11 +1025,11 @@ function filterLocalities() {
       <td>
         <div class="tbl-actions">
           <button class="btn btn-sm rerun-btn"
-                  onclick="rerunLocality(${l.id})" title="Re-run this search">🔁 Re-run</button>
+                  onclick="rerunLocality(${l.id})" title="Re-run this search">${SVG.refresh} Re-run</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px"
-                  onclick="switchTab('map');loadLocalityOnMap(${l.id})" title="View on map">🗺 Map</button>
+                  onclick="switchTab('map');loadLocalityOnMap(${l.id})" title="View on map">${SVG.mapIcon} Map</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#dc2626"
-                  onclick="deleteLocality(${l.id})" title="Delete">🗑</button>
+                  onclick="deleteLocality(event,${l.id})" title="Delete">${SVG.trash}</button>
         </div>
       </td>
     </tr>`).join('');
@@ -1025,19 +1128,20 @@ function renderDbHistory() {
     const issue   = (h.top_issues || [])[0] || '';
     const website = h.website
       ? `<a class="tbl-link" href="${esc(h.website)}" target="_blank" rel="noopener"
-              onclick="event.stopPropagation()">↗ ${esc(h.website.replace(/^https?:\/\//, '').substring(0,30))}</a>`
+              onclick="event.stopPropagation()">${SVG.extLink} ${esc(h.website.replace(/^https?:\/\//, '').substring(0,30))}</a>`
       : '<span style="color:#d1d5db;font-size:11px">none</span>';
+    const reachDot = `<span class="status-dot ${h.reachable === false ? 'offline' : 'online'}" title="${h.reachable === false ? 'Unreachable' : 'Reachable'}"></span>`;
     return `<tr>
       <td style="font-weight:500">${esc((h.business_name || '(unnamed)').substring(0,32))}</td>
       <td>${website}</td>
       <td><strong>${h.score ?? '—'}</strong></td>
       <td><span class="tbl-prio tbl-prio-${h.priority}">${h.priority || '?'}</span></td>
-      <td>${h.reachable === false ? '🔴' : '🟢'}</td>
+      <td style="text-align:center">${reachDot}</td>
       <td style="font-size:11px;color:#6b7280" title="${esc(issue)}">${esc(issue.substring(0,45))}</td>
       <td style="white-space:nowrap;font-size:12px;color:#6b7280">${fmtDate(h.audited_at)}</td>
       <td>
-        <button class="btn btn-ghost btn-sm report-btn" style="font-size:11px"
-                onclick="openReport(${h.business_id})">📋</button>
+        <button class="btn btn-ghost btn-sm report-btn" style="font-size:11px;gap:4px"
+                onclick="openReport(${h.business_id})">${SVG.report}</button>
       </td>
     </tr>`;
   }).join('');
@@ -1151,8 +1255,8 @@ function renderLatestReport(audit) {
 
   document.getElementById('report-audited-at').textContent =
     audit.audited_at ? `Audited ${fmtDate(audit.audited_at)}` : '';
-  document.getElementById('report-reachable').textContent =
-    audit.reachable === false ? '🔴 Site unreachable' : '🟢 Site reachable';
+  document.getElementById('report-reachable').innerHTML =
+    `<span class="status-dot ${audit.reachable === false ? 'offline' : 'online'}" style="margin-right:4px"></span>${audit.reachable === false ? 'Site unreachable' : 'Site reachable'}`;
 
   // Issues
   const issues = audit.top_issues || [];
@@ -1169,7 +1273,7 @@ function renderLatestReport(audit) {
     document.getElementById('report-signals').innerHTML = entries.map(([k, v]) => {
       const meta     = SIGNAL_LABELS[k] || { label: k.replace(/_/g,' '), good: true };
       const passing  = meta.good ? !!v : !v;
-      const icon     = passing ? '✅' : '❌';
+      const icon     = passing ? SVG.check : SVG.xMark;
       const labelCls = passing ? 'sig-pass' : 'sig-fail';
       return `<div class="sig-item ${labelCls}">
         <span class="sig-icon">${icon}</span>
@@ -1182,7 +1286,7 @@ function renderLatestReport(audit) {
   const errBlock = document.getElementById('report-error-block');
   if (audit.audit_error) {
     errBlock.style.display = '';
-    errBlock.textContent   = `⚠ Audit error: ${audit.audit_error}`;
+    errBlock.innerHTML   = `<span style="display:inline-flex;align-items:center;gap:6px">${SVG.warning} Audit error: ${esc(audit.audit_error)}</span>`;
   } else {
     errBlock.style.display = 'none';
   }
@@ -1238,11 +1342,12 @@ function renderHistoryTab(history) {
   // Table rows
   tbody.innerHTML = history.map(h => {
     const issues = (h.top_issues || []).slice(0, 2).join('; ');
+    const reachDot = `<span class="status-dot ${h.reachable === false ? 'offline' : 'online'}" title="${h.reachable === false ? 'Unreachable' : 'Reachable'}"></span>`;
     return `<tr>
       <td style="white-space:nowrap">${fmtDate(h.audited_at)}</td>
       <td><strong>${h.score ?? '—'}</strong></td>
       <td><span class="tbl-prio tbl-prio-${h.priority}">${h.priority || '?'}</span></td>
-      <td>${h.reachable === false ? '🔴' : '🟢'}</td>
+      <td style="text-align:center">${reachDot}</td>
       <td style="font-size:11px;color:#6b7280">${esc(issues || '—')}</td>
     </tr>`;
   }).join('');
@@ -1270,15 +1375,14 @@ function fmtDate(iso) {
 
 /* ── Boot ───────────────────────────────────────────────────────────────────*/
 async function boot() {
-  initMap();
+  // Map is initialised lazily when the user first opens the Discover tab.
   try {
     const cfg = await api('GET', '/api/config');
     if (cfg.has_apify) document.getElementById('chk-apify').checked = true;
   } catch (_) {}
   refreshStats();
-  refreshHistory();
-  // Pre-load all saved businesses so Browse Clients and map markers are
-  // populated immediately without needing to run a new search first.
+  // Pre-load all saved businesses — Clients tab is the landing page so this
+  // populates it immediately without any user action.
   loadAllBusinesses();
 }
 
