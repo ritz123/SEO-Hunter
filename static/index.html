@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>siteCp — Local Business SEO Finder</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">siteCp <span>Local SEO Audit</span></div>
+
+  <!-- Tab bar -->
+  <nav class="tab-bar" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('map')"    id="tab-map">🗺 Map</button>
+    <button class="tab-btn"        onclick="switchTab('browse')"  id="tab-browse">📋 Browse Clients</button>
+    <button class="tab-btn"        onclick="switchTab('database')" id="tab-database">🗄 Database</button>
+  </nav>
+
+  <div class="header-stats">
+    <span><strong id="stat-localities">—</strong> localities</span>
+    <span><strong id="stat-businesses">—</strong> businesses</span>
+    <span><strong id="stat-prio-a" style="color:#dc2626">—</strong> Priority A</span>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MAP VIEW
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-map" class="view active">
+  <div class="workspace">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="search-panel">
+        <h2>Find Businesses</h2>
+
+        <div class="field" style="position:relative">
+          <label>Location</label>
+          <input id="inp-locality" type="text" placeholder="e.g. Austin TX, Portland OR…"
+                 autocomplete="off" oninput="onLocalityInput()" />
+          <div id="suggest-dropdown" class="suggest-dropdown"></div>
+        </div>
+
+        <div class="field">
+          <label>Category / vertical</label>
+          <select id="inp-category">
+            <option value="restaurants" selected>Restaurants</option>
+            <option value="plumbers">Plumbers</option>
+            <option value="dentists">Dentists</option>
+            <option value="auto repair">Auto Repair</option>
+            <option value="HVAC">HVAC</option>
+            <option value="chiropractors">Chiropractors</option>
+            <option value="optometrists">Optometrists</option>
+            <option value="law firms">Law Firms</option>
+            <option value="electricians">Electricians</option>
+            <option value="funeral homes">Funeral Homes</option>
+            <option value="hardware stores">Hardware Stores</option>
+            <option value="accountants">Accountants</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Radius (km)</label>
+            <input id="inp-radius" type="number" value="5" min="1" max="50" />
+          </div>
+          <div class="field">
+            <label>Max results</label>
+            <input id="inp-max" type="number" value="50" min="5" max="500" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" id="chk-apify" style="width:auto;" />
+            Use Apify (richer data, requires token)
+          </label>
+        </div>
+
+        <button class="btn btn-primary" id="btn-search" onclick="startSearch()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search &amp; Audit
+        </button>
+
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-label" id="progress-label">Starting…</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
+          <div class="progress-counts" id="progress-counts"></div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setMapFilter('all', this)">All</button>
+        <button class="filter-btn prio-a" onclick="setMapFilter('A', this)">Priority A</button>
+        <button class="filter-btn prio-b" onclick="setMapFilter('B', this)">Priority B</button>
+        <button class="filter-btn prio-c" onclick="setMapFilter('C', this)">Priority C</button>
+        <button class="filter-btn"        onclick="setMapFilter('no-site', this)">No Website</button>
+      </div>
+
+      <div id="business-list">
+        <div class="empty-state">
+          <div class="icon">🗺️</div>
+          Enter a city and category above,<br>then click <strong>Search &amp; Audit</strong>.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Map -->
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-hint" class="map-hint">🖱 Click anywhere on the map to pick a search location</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     BROWSE VIEW
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-browse" class="view">
+
+  <!-- Filter toolbar -->
+  <div class="browse-toolbar">
+    <div class="browse-filters">
+
+      <div class="bf-group">
+        <label>Priority</label>
+        <div class="chip-group" id="bf-priority">
+          <button class="chip active" data-val="">All</button>
+          <button class="chip chip-a" data-val="A">A</button>
+          <button class="chip chip-b" data-val="B">B</button>
+          <button class="chip chip-c" data-val="C">C</button>
+        </div>
+      </div>
+
+      <div class="bf-group">
+        <label>Locality</label>
+        <select id="bf-locality" onchange="applyBrowseFilters()">
+          <option value="">All localities</option>
+        </select>
+      </div>
+
+      <div class="bf-group">
+        <label>Category</label>
+        <select id="bf-category" onchange="applyBrowseFilters()">
+          <option value="">All categories</option>
+        </select>
+      </div>
+
+      <div class="bf-group">
+        <label>Website</label>
+        <select id="bf-website" onchange="applyBrowseFilters()">
+          <option value="">Any</option>
+          <option value="yes">Has website</option>
+          <option value="no">No website</option>
+        </select>
+      </div>
+
+      <div class="bf-group" style="flex:1;min-width:160px">
+        <label>Search name</label>
+        <input id="bf-search" type="text" placeholder="Business name…"
+               oninput="applyBrowseFilters()" style="width:100%;" />
+      </div>
+
+    </div>
+
+    <div class="browse-actions">
+      <span class="browse-count" id="browse-count">— businesses</span>
+      <button class="btn btn-ghost btn-sm" onclick="exportBrowseCSV()">
+        ↓ Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table class="biz-table" id="biz-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="priority"     onclick="sortBrowse('priority')">Priority <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="score"        onclick="sortBrowse('score')">Score <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="name"         onclick="sortBrowse('name')">Business <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="category"     onclick="sortBrowse('category')">Category <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="city"         onclick="sortBrowse('city')">City <span class="sort-icon"></span></th>
+          <th>Website</th>
+          <th>Phone</th>
+          <th class="sortable" data-col="rating"       onclick="sortBrowse('rating')">Rating <span class="sort-icon"></span></th>
+          <th>Top Issue</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="biz-tbody">
+        <tr><td colspan="10" class="table-empty">Run a search on the Map tab to populate data.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DATABASE VIEW
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-database" class="view">
+
+  <!-- Stats overview cards -->
+  <div class="db-overview">
+    <div class="db-stat-card">
+      <div class="db-stat-value" id="dbs-localities">—</div>
+      <div class="db-stat-label">Localities</div>
+    </div>
+    <div class="db-stat-card">
+      <div class="db-stat-value" id="dbs-businesses">—</div>
+      <div class="db-stat-label">Businesses</div>
+    </div>
+    <div class="db-stat-card">
+      <div class="db-stat-value" id="dbs-audited">—</div>
+      <div class="db-stat-label">Audited</div>
+    </div>
+    <div class="db-stat-card prio-a">
+      <div class="db-stat-value" id="dbs-prio-a">—</div>
+      <div class="db-stat-label">Priority A</div>
+    </div>
+    <div class="db-stat-card prio-b">
+      <div class="db-stat-value" id="dbs-prio-b">—</div>
+      <div class="db-stat-label">Priority B</div>
+    </div>
+    <div class="db-stat-card prio-c">
+      <div class="db-stat-value" id="dbs-prio-c">—</div>
+      <div class="db-stat-label">Priority C</div>
+    </div>
+    <div class="db-stat-card">
+      <div class="db-stat-value" id="dbs-runs">—</div>
+      <div class="db-stat-label">Audit Runs</div>
+    </div>
+  </div>
+
+  <!-- Sub-tab bar -->
+  <div class="db-subtabs">
+    <button class="db-subtab active" onclick="switchDbTab('localities', this)">📍 Localities</button>
+    <button class="db-subtab"        onclick="switchDbTab('history',    this)">📈 Audit History</button>
+  </div>
+
+  <!-- ── Localities sub-tab ── -->
+  <div id="dbt-localities" class="db-content active">
+    <div class="db-toolbar">
+      <input id="db-loc-search" type="search" placeholder="Filter by name or category…"
+             oninput="filterLocalities()" class="db-search-input" />
+      <span id="db-loc-count" class="db-row-count"></span>
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Radius</th>
+            <th>Businesses</th>
+            <th>Audited</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="db-loc-tbody">
+          <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Audit History sub-tab ── -->
+  <div id="dbt-history" class="db-content">
+    <div class="db-toolbar">
+      <input id="db-hist-search" type="search" placeholder="Filter by business name or URL…"
+             oninput="filterAuditHistory()" class="db-search-input" />
+      <select id="db-hist-prio" onchange="filterAuditHistory()" class="db-select">
+        <option value="">All priorities</option>
+        <option value="A">Priority A</option>
+        <option value="B">Priority B</option>
+        <option value="C">Priority C</option>
+      </select>
+      <span id="db-hist-count" class="db-row-count"></span>
+      <button class="btn btn-ghost btn-sm" onclick="exportHistoryCSV()">⬇ CSV</button>
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Website</th>
+            <th>Score</th>
+            <th>Priority</th>
+            <th>Reachable</th>
+            <th>Top Issue</th>
+            <th>Audited At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="db-hist-tbody">
+          <tr><td colspan="8" class="table-empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="db-hist-pagination"></div>
+  </div>
+
+</div>
+
+<!-- ── Detail panel (shared between views) ──────────────────────────────────── -->
+<div id="detail-panel">
+  <div class="detail-header">
+    <div>
+      <div class="detail-name" id="dp-name">—</div>
+      <div class="detail-addr" id="dp-addr"></div>
+    </div>
+    <button class="close-btn" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+  <div class="detail-footer">
+    <button class="btn btn-ghost btn-sm" onclick="reauditSelected()">↺ Re-audit</button>
+    <a class="btn btn-ghost btn-sm" id="dp-website" href="#" target="_blank" rel="noopener">↗ Website</a>
+    <a class="btn btn-ghost btn-sm" id="dp-gbp"     href="#" target="_blank" rel="noopener">📍 GBP</a>
+  </div>
+</div>
+
+<!-- ── History panel ─────────────────────────────────────────────────────────── -->
+<button class="btn btn-ghost btn-sm history-toggle" id="history-toggle-btn"
+        onclick="toggleHistory()" title="Previous searches">🕐 History</button>
+<div id="history-panel">
+  <h3>Previous Localities</h3>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<!-- ── Map legend ────────────────────────────────────────────────────────────── -->
+<div class="map-legend" id="map-legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Priority A</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#d97706"></span> Priority B</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Priority C</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#9ca3af"></span> Not audited</div>
+</div>
+
+<!-- ── Audit Report Modal ─────────────────────────────────────────────────────── -->
+<div id="report-modal" class="modal-overlay" onclick="closeReport(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 id="report-biz-name">Business Name</h2>
+        <a id="report-biz-url" href="#" target="_blank" class="modal-url"></a>
+      </div>
+      <button class="modal-close" onclick="closeReport()">✕</button>
+    </div>
+
+    <!-- Tabs inside modal -->
+    <div class="modal-tabs">
+      <button class="mtab-btn active" onclick="switchReportTab('latest', this)">Latest Report</button>
+      <button class="mtab-btn" onclick="switchReportTab('history', this)">History</button>
+    </div>
+
+    <!-- Latest report tab -->
+    <div id="mtab-latest" class="mtab-content active">
+      <div class="report-meta">
+        <span id="report-score-badge" class="report-score-badge"></span>
+        <span id="report-audited-at" class="report-audited-at"></span>
+        <span id="report-reachable" class="report-reachable"></span>
+      </div>
+
+      <h3 class="report-section-title">Top Issues</h3>
+      <ul id="report-issues" class="report-issues"></ul>
+
+      <h3 class="report-section-title">Signal Checklist</h3>
+      <div id="report-signals" class="report-signals-grid"></div>
+
+      <div id="report-error-block" class="report-error" style="display:none"></div>
+    </div>
+
+    <!-- History tab -->
+    <div id="mtab-history" class="mtab-content">
+      <div id="report-history-chart" class="history-chart-wrap"></div>
+      <table class="history-table">
+        <thead>
+          <tr><th>Date</th><th>Score</th><th>Priority</th><th>Reachable</th><th>Top Issues</th></tr>
+        </thead>
+        <tbody id="report-history-rows"></tbody>
+      </table>
+      <p id="report-history-empty" class="history-empty" style="display:none">
+        No history yet — run another audit to start tracking trends.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
