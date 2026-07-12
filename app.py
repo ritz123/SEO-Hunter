@@ -2,7 +2,7 @@
 FastAPI web application — serves the map frontend and exposes the REST API.
 Map layer: Leaflet.js + OpenStreetMap (no Google API keys required).
 Geocoding: Nominatim (free, OSM-based).
-Business discovery: Apify → OSM Overpass → Yellow Pages (fallback chain).
+Business discovery: OSM Overpass → Yellow Pages → Yelp (fallback chain).
 
 Routes:
   GET  /                            → map frontend (index.html)
@@ -53,10 +53,6 @@ from src.database import (
 )
 from src.auditor import audit as run_audit, AuditResult as AuditResultData
 from src.scorer import build_scored_result
-from src.apify_scraper import (
-    ApifyBusiness,
-    scrape_google_maps,
-)
 from src.prospector import (
     prospect_yellow_pages,
     prospect_yelp,
@@ -73,7 +69,7 @@ from src.osm_prospector import (
 # ── App setup ─────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="siteCp",
+    title="SEO Hunter",
     description="Find local businesses with outdated websites",
     version="0.1.0",
 )
@@ -161,7 +157,6 @@ class SearchRequest(BaseModel):
     radius_km: int = Field(5, ge=1, le=50)
     category: str = Field("restaurants", description="Business category / search term")
     max_results: int = Field(50, ge=1, le=500)
-    use_apify: bool = Field(True, description="Use Apify; falls back to Yellow Pages if False or no token")
 
 
 class ReauditRequest(BaseModel):
@@ -169,42 +164,6 @@ class ReauditRequest(BaseModel):
 
 
 # ── Background task: scrape + audit ──────────────────────────────────────────
-
-def _upsert_business_from_apify(
-    db: Session,
-    item: ApifyBusiness,
-    locality_id: int,
-) -> Business:
-    """Insert or update a Business row from an Apify result."""
-    biz = None
-    if item.apify_id:
-        biz = db.query(Business).filter_by(apify_id=item.apify_id).first()
-    if biz is None and item.name:
-        biz = (
-            db.query(Business)
-            .filter_by(name=item.name, locality_id=locality_id)
-            .first()
-        )
-    if biz is None:
-        biz = Business(locality_id=locality_id)
-        db.add(biz)
-
-    biz.name = item.name
-    biz.website = item.website
-    biz.phone = item.phone
-    biz.address = item.address
-    biz.lat = item.lat
-    biz.lng = item.lng
-    biz.category = item.category
-    biz.rating = item.rating
-    biz.review_count = item.review_count
-    biz.gbp_url = item.gbp_url
-    biz.apify_id = item.apify_id or biz.apify_id
-    biz.source = "apify"
-    db.commit()
-    db.refresh(biz)
-    return biz
-
 
 def _upsert_business_from_lead(
     db: Session,
@@ -267,6 +226,11 @@ def _audit_and_save(db: Session, biz: Business) -> None:
     existing.audit_error = sr.audit_error
     existing.audited_at = now
 
+    # Persist email extracted from the page (don't overwrite if already set)
+    extracted_email = sr.raw.get("email", "") if hasattr(sr, "raw") and isinstance(sr.raw, dict) else ""
+    if extracted_email and not biz.email:
+        biz.email = extracted_email
+
     # Append an immutable history entry for trend tracking
     history_entry = AuditHistory(
         business_id=biz.id,
@@ -285,7 +249,7 @@ def _audit_and_save(db: Session, biz: Business) -> None:
 def _run_scrape_and_audit(job_id: int, request: SearchRequest) -> None:
     """
     Long-running background task:
-      1. Scrape businesses (Apify or fallback)
+      1. Scrape businesses (OSM Overpass → Yellow Pages → Yelp)
       2. Save to DB
       3. Audit each site
       4. Mark job done
@@ -302,84 +266,60 @@ def _run_scrape_and_audit(job_id: int, request: SearchRequest) -> None:
         locality = db.query(Locality).get(job.locality_id)
         businesses_to_audit: list[Business] = []
 
-        # ── Step 1: Scrape ─────────────────────────────────────────────────
-        use_apify = request.use_apify and bool(config.APIFY_API_TOKEN)
-
-        if use_apify:
-            try:
-                items, run_id = scrape_google_maps(
-                    search_term=request.category,
-                    location=request.locality_name,
-                    max_items=request.max_results,
+        # ── Step 1: Scrape (OSM Overpass → Yellow Pages → Yelp) ────────────
+        try:
+            # Priority: OSM Overpass (free) → Yellow Pages → Yelp
+            osm_items: list[OSMBusiness] = []
+            if request.lat and request.lng:
+                osm_items = search_overpass(
+                    vertical=request.category,
                     lat=request.lat,
                     lng=request.lng,
                     radius_km=request.radius_km,
+                    max_results=request.max_results,
                 )
-                job.apify_run_id = run_id
-                db.commit()
 
-                for item in items:
-                    biz = _upsert_business_from_apify(db, item, job.locality_id)
-                    businesses_to_audit.append(biz)
-
-            except Exception as exc:
-                job.error = f"Apify error: {exc} — falling back to Yellow Pages"
-                db.commit()
-                use_apify = False  # fall through to fallback
-
-        if not use_apify:
-            try:
-                # Priority: OSM Overpass (free) → Yellow Pages → Yelp
-                osm_items: list[OSMBusiness] = []
-                if request.lat and request.lng:
-                    osm_items = search_overpass(
-                        vertical=request.category,
-                        lat=request.lat,
-                        lng=request.lng,
-                        radius_km=request.radius_km,
-                        max_results=request.max_results,
+            if osm_items:
+                for item in osm_items:
+                    lead = BusinessLead(
+                        name=item.name,
+                        website=item.website,
+                        phone=item.phone,
+                        address=item.address,
+                        city=request.locality_name,
+                        category=item.category,
+                        source="osm",
                     )
-
-                if osm_items:
-                    for item in osm_items:
-                        lead = BusinessLead(
-                            name=item.name,
-                            website=item.website,
-                            phone=item.phone,
-                            address=item.address,
-                            city=request.locality_name,
-                            category=item.category,
-                            source="osm",
-                        )
-                        biz = _upsert_business_from_lead(db, lead, job.locality_id)
-                        # Persist coordinates from OSM
-                        if item.lat and item.lng:
-                            biz.lat = item.lat
-                            biz.lng = item.lng
-                            db.commit()
-                        businesses_to_audit.append(biz)
-                else:
-                    # Fallback to Yellow Pages scraper
-                    leads = prospect_yellow_pages(
+                    biz = _upsert_business_from_lead(db, lead, job.locality_id)
+                    if item.lat and item.lng:
+                        biz.lat = item.lat
+                        biz.lng = item.lng
+                    if item.email and not biz.email:
+                        biz.email = item.email
+                    db.commit()
+                    businesses_to_audit.append(biz)
+            else:
+                # Fallback to Yellow Pages → Yelp
+                leads = prospect_yellow_pages(
+                    vertical=request.category,
+                    city=request.locality_name,
+                    max_results=request.max_results,
+                )
+                if not leads and config.YELP_API_KEY:
+                    leads = prospect_yelp(
                         vertical=request.category,
                         city=request.locality_name,
                         max_results=request.max_results,
                     )
-                    if not leads and config.YELP_API_KEY:
-                        leads = prospect_yelp(
-                            vertical=request.category,
-                            city=request.locality_name,
-                            max_results=request.max_results,
-                        )
-                    for lead in leads:
-                        biz = _upsert_business_from_lead(db, lead, job.locality_id)
-                        businesses_to_audit.append(biz)
-            except Exception as exc:
-                job.status = "failed"
-                job.error = str(exc)
-                job.completed_at = datetime.utcnow()
-                db.commit()
-                return
+                for lead in leads:
+                    biz = _upsert_business_from_lead(db, lead, job.locality_id)
+                    businesses_to_audit.append(biz)
+        except Exception as exc:
+            job.status = "failed"
+            job.error = str(exc)
+            job.completed_at = datetime.utcnow()
+            db.commit()
+            return
 
         job.businesses_found = len(businesses_to_audit)
         job.status = "auditing"
@@ -427,7 +367,6 @@ def serve_index():
 def get_config():
     """Return non-secret config values the frontend needs."""
     return {
-        "has_apify": bool(config.APIFY_API_TOKEN),
         "default_city": config.TARGET_CITY,
         "default_verticals": config.DEFAULT_VERTICALS[:8],
     }
@@ -571,7 +510,8 @@ def list_businesses(
     priority: str | None = Query(None, pattern="^[ABC]$"),
     category: str | None = Query(None),
     has_website: bool | None = Query(None),
-    limit: int = Query(200, le=1000),
+    contact_complete: bool | None = Query(None, description="True = has ≥1 contact field; False = missing all contact info"),
+    limit: int = Query(200, le=5000),
     offset: int = Query(0),
     db: Session = Depends(get_db),
 ):
@@ -586,6 +526,17 @@ def list_businesses(
         q = q.filter(Business.category.ilike(f"%{category}%"))
     if priority:
         q = q.join(AuditResult).filter(AuditResult.priority == priority)
+    if contact_complete is True:
+        q = q.filter(
+            (Business.phone != None) | (Business.email != None) |
+            (Business.address != None) | (Business.lat != None)
+        )
+    if contact_complete is False:
+        q = q.filter(
+            (Business.phone == None) & (Business.email == None) &
+            ((Business.address == None) | (Business.address == "")) &
+            (Business.lat == None)
+        )
 
     total = q.count()
     businesses = q.order_by(Business.id.desc()).offset(offset).limit(limit).all()

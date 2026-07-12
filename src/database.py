@@ -110,6 +110,7 @@ class Business(Base):
     rating = Column(Float, nullable=True)
     review_count = Column(Integer, nullable=True)
     source = Column(String(64), nullable=True)
+    email = Column(String(255), nullable=True)
     gbp_url = Column(String(1024), nullable=True)
     yelp_url = Column(String(1024), nullable=True)
     apify_id = Column(String(255), nullable=True, unique=True)
@@ -134,8 +135,15 @@ class Business(Base):
             "review_count": self.review_count,
             "source": self.source,
             "gbp_url": self.gbp_url,
+            "email": self.email,
             "yelp_url": self.yelp_url,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "contact_score": sum([
+                bool(self.phone),
+                bool(self.email),
+                bool(self.address),
+                bool(self.lat and self.lng),
+            ]),
         }
         if include_audit and self.audit_result:
             d["audit"] = self.audit_result.to_dict()

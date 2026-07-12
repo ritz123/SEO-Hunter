@@ -170,6 +170,7 @@ class OSMBusiness:
     lng: float | None = None
     address: str = ""
     phone: str = ""
+    email: str = ""
     website: str = ""
     category: str = ""
     opening_hours: str = ""
@@ -237,6 +238,7 @@ def _parse_overpass_element(el: dict, category: str) -> OSMBusiness | None:
         lng=float(lng) if lng is not None else None,
         address=address,
         phone=tags.get("phone") or tags.get("contact:phone") or "",
+        email=tags.get("email") or tags.get("contact:email") or "",
         website=tags.get("website") or tags.get("contact:website") or tags.get("url") or "",
         category=category,
         opening_hours=tags.get("opening_hours", ""),

@@ -1,0 +1,180 @@
+============================================================
+  COLD CALL SCRIPT — Stage 5 (Phone / Walk-in)
+============================================================
+
+────────────────────────────────────────────────────────────
+PHONE CALL SCRIPT
+────────────────────────────────────────────────────────────
+
+PREPARATION (before dialling)
+  • Pull up the business's Google Maps listing
+  • Have their audit score and top 3 issues in front of you
+  • Know one competitor in the same city who ranks above them
+  • Know the business's review count and star rating
+
+──────────────────────────────
+OPENING (first 8 seconds)
+──────────────────────────────
+
+"Hi, is this [Owner First Name]? Great — my name is [Your Name],
+I'm a local SEO consultant based in [Your City]. Do you have
+90 seconds? I found something on your Google listing I thought
+you'd want to know about."
+
+  → If they say YES: continue to Discovery
+  → If they say BUSY: "Totally understand. Can I send you a quick
+    email with what I found? What's the best address?"
+  → If they say NO or hang up: note and follow up by email/walk-in
+
+──────────────────────────────
+HOOK — lead with business impact
+──────────────────────────────
+
+"When I search for [service] in [City] on Google, [Competitor Name]
+shows up in the top 3. [Business Name] doesn't appear at all on
+the first page — even though you have [X] reviews and have clearly
+been around a long time."
+
+  Pause. Let them respond.
+
+──────────────────────────────
+DISCOVERY — ask, don't pitch
+──────────────────────────────
+
+"Out of curiosity — do you get many calls or bookings through
+your website, or do most customers find you through referrals
+and the Google listing?"
+
+  → If referrals / GBP: "That's common for established businesses.
+    The thing is, a lot of new customers default to Google search
+    first — especially for urgent needs like [plumbing / dental
+    emergencies / etc.]. If your site has technical issues, you're
+    invisible to them."
+
+  → If they say website is fine: "Totally — I thought the same,
+    which is why I ran it through Google's own tool. There are
+    [X] signals flagged. Happy to share the full report."
+
+──────────────────────────────
+ISSUE REVEAL (top 2-3 issues)
+──────────────────────────────
+
+"I ran a quick technical audit on [domain.com] — using Google's
+own PageSpeed tool and a few others. Here's what I found:
+
+  One: [Issue 1, e.g. 'The site doesn't load on mobile devices
+  correctly — it fails Google's mobile-friendly test.']
+
+  Two: [Issue 2, e.g. 'The SSL certificate is flagged as untrusted,
+  so Chrome shows a warning before visitors even see your site.']
+
+  Three: [Issue 3, e.g. 'The copyright footer still says 2019,
+  which signals to Google that the content is outdated.']
+
+These are exactly the things Google looks at to rank a site."
+
+──────────────────────────────
+SOFT CLOSE
+──────────────────────────────
+
+"I can walk you through the full audit in a 15-minute call —
+no cost, no pressure. If at the end you want to handle it
+yourself, I'll send you the full report. If you'd like help,
+we can talk about options.
+
+Does [specific day, e.g. 'Thursday at 2pm'] work for you?"
+
+  → If YES: book it immediately. Confirm email for calendar invite.
+  → If MAYBE: "How about I send you the audit report first so
+    you can see exactly what I'm looking at? What's your email?"
+  → If NO INTEREST: "Totally fair. If you ever want a second
+    opinion on your Google presence, I'm easy to reach.
+    Have a great day."
+
+──────────────────────────────
+OBJECTION HANDLING
+──────────────────────────────
+
+"We already have someone handling our website."
+→ "Great — they might not be aware of these specific technical
+   signals. I can send you the report so you can share it with
+   them and get their take. Would that help?"
+
+"We don't get business from the internet."
+→ "That's changing fast in [service type]. [X]% of people now
+   Google a service before calling — even if they heard about
+   you from a friend. The search is the trust check.
+   You might be surprised how much you're leaving on the table."
+
+"How much does this cost?"
+→ "The audit is completely free. If you decide you want help
+   fixing the issues, we can talk about pricing after you've
+   seen the report. There's no obligation at all."
+
+"I don't have time right now."
+→ "Completely understood. Can I send you the report by email
+   so you can look at it when it suits you?"
+
+──────────────────────────────
+CALL LOG (fill in after each call)
+──────────────────────────────
+
+Business   : ___________________________
+Owner      : ___________________________
+Date/Time  : ___________________________
+Outcome    :
+  [ ] Booked call on ___________________
+  [ ] Send email — address: ____________
+  [ ] Not interested — do not contact
+  [ ] No answer — follow up on __________
+  [ ] Voicemail left
+Notes      : ___________________________
+
+────────────────────────────────────────────────────────────
+WALK-IN SCRIPT (in-person visit)
+────────────────────────────────────────────────────────────
+
+Best for: restaurants, retail, salons, repair shops, dental/medical
+reception desks.
+
+AT THE FRONT DESK:
+
+"Hi — is the owner or manager available? I'm [Name], I'm a local
+SEO consultant. I was doing some research on businesses in the area
+and found something about [Business Name]'s website I thought the
+owner would want to know. It only takes two minutes. Is there a
+good time I could come back, or can I leave a note?"
+
+  → Leave a printed one-page audit summary with your card.
+  → Follow up by phone 2 days later referencing the visit.
+
+WHAT TO LEAVE:
+  • Printed one-page audit comparison (Your site vs. competitor)
+  • Business card with phone + email
+  • No pitch deck — keep it curiosity-driven
+
+============================================================
+WEEKLY CALL TRACKER TEMPLATE
+============================================================
+
+Week of: ___________________
+Target vertical: ___________
+City: ______________________
+
+| # | Business       | Phone | Called? | Outcome          | Follow-up |
+|---|----------------|-------|---------|------------------|-----------|
+| 1 |                |       |         |                  |           |
+| 2 |                |       |         |                  |           |
+| 3 |                |       |         |                  |           |
+| 4 |                |       |         |                  |           |
+| 5 |                |       |         |                  |           |
+| 6 |                |       |         |                  |           |
+| 7 |                |       |         |                  |           |
+| 8 |                |       |         |                  |           |
+| 9 |                |       |         |                  |           |
+|10 |                |       |         |                  |           |
+
+Goal: 5–10 conversations per week from 20–30 dials.
+Conversion benchmark: 1 paid client per 15–20 conversations.
+
+============================================================

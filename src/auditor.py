@@ -310,6 +310,128 @@ def check_cta(html: str) -> bool:
     return True
 
 
+def extract_email(html: str) -> str:
+    """
+    Extract the first business contact email found on the page.
+    Checks mailto: links first (most reliable), then falls back to a
+    regex scan of visible text. Returns empty string if nothing found.
+    """
+    soup = _soup(html)
+    # 1. mailto: links are the most reliable source
+    for a in soup.find_all("a", href=re.compile(r'^mailto:', re.I)):
+        addr = a["href"][7:].split("?")[0].strip().lower()
+        if addr and "@" in addr:
+            return addr
+    # 2. Regex scan of page text — filter obvious false positives
+    email_re = re.compile(
+        r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}',
+    )
+    skip_domains = {"example.com", "domain.com", "email.com", "yourdomain.com",
+                    "sentry.io", "wixpress.com", "squarespace.com"}
+    for match in email_re.finditer(soup.get_text(" ")):
+        addr = match.group().lower()
+        domain = addr.split("@")[-1]
+        if domain not in skip_domains and not domain.endswith((".png", ".jpg", ".gif", ".svg")):
+            return addr
+    return ""
+
+
+def check_security_headers(url: str) -> dict[str, bool]:
+    """
+    Check HTTP response headers for missing security best practices.
+    Returns a dict of signal_key → bool (True = issue present).
+    """
+    try:
+        resp = _get(url, timeout=10)
+        h = {k.lower(): v for k, v in resp.headers.items()}
+        csp = h.get('content-security-policy', '')
+        return {
+            'missing_hsts':           'strict-transport-security' not in h,
+            'missing_csp':            not csp,
+            'missing_xframe':         'x-frame-options' not in h and 'frame-ancestors' not in csp,
+            'missing_xcto':           h.get('x-content-type-options', '').lower() != 'nosniff',
+            'missing_referrer_policy': 'referrer-policy' not in h,
+        }
+    except Exception:
+        return {}
+
+
+def check_mixed_content(html: str, base_url: str) -> bool:
+    """
+    True when an HTTPS page loads HTTP (insecure) resources.
+    Only meaningful for HTTPS sites.
+    """
+    if not base_url.startswith('https://'):
+        return False
+    soup = _soup(html)
+    http_re = re.compile(r'^http://', re.I)
+    for tag in soup.find_all(['img', 'script', 'iframe'], src=True):
+        if http_re.match(tag.get('src', '')):
+            return True
+    for tag in soup.find_all('link', href=True):
+        if http_re.match(tag.get('href', '')):
+            return True
+    return False
+
+
+def check_exposed_sensitive_paths(base_url: str) -> tuple[bool, list[str]]:
+    """
+    Probe a short list of critical sensitive paths.
+    Returns (signal_present, list_of_exposed_paths).
+    A 200 response means exposed; 403 means the file exists but access-denied
+    (still a leak of information).
+    """
+    PATHS = [
+        '/.git/HEAD',
+        '/.env',
+        '/wp-config.php.bak',
+        '/phpinfo.php',
+        '/.htpasswd',
+        '/server-status',
+    ]
+    parsed = urlparse(base_url)
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    exposed = []
+    for path in PATHS:
+        try:
+            r = requests.head(
+                root + path,
+                headers=config.DESKTOP_HEADERS,
+                timeout=5,
+                allow_redirects=False,
+            )
+            if r.status_code in (200, 403):
+                exposed.append(path)
+        except Exception:
+            pass
+        time.sleep(0.15)
+    return bool(exposed), exposed
+
+
+def check_cms_version_exposed(html: str, response_headers: dict) -> tuple[bool, str]:
+    """
+    True when a CMS version number is detectable in the page source or HTTP headers.
+    Returns (signal_present, detected_version_string).
+    """
+    soup = _soup(html)
+    # Meta generator tag
+    gen = soup.find('meta', attrs={'name': re.compile(r'^generator$', re.I)})
+    if gen:
+        content = gen.get('content', '')
+        if re.search(r'(wordpress|joomla|drupal|typo3|wix|squarespace)\s*[\d.]+', content, re.I):
+            return True, content
+    # WordPress version in asset URLs (?ver=x.x.x)
+    wp = re.search(r'wp-(?:content|includes)[^"\']*\?ver=([\d.]+)', html)
+    if wp:
+        return True, f"WordPress {wp.group(1)}"
+    # X-Powered-By / X-Generator headers
+    for hdr in ('x-powered-by', 'x-generator', 'x-drupal-cache'):
+        val = response_headers.get(hdr.lower(), '')
+        if re.search(r'php/[\d.]+|asp\.net|drupal', val, re.I):
+            return True, val
+    return False, ''
+
+
 def check_stale_blog(html: str) -> tuple[bool, str | None]:
     """
     True when the most recent blog/news post date found is older than 2 years.
@@ -365,6 +487,7 @@ def audit(url: str, check_nav_links: bool = False) -> AuditResult:
     try:
         resp = _get(final_url)
         html = resp.text
+        resp_headers = {k.lower(): v for k, v in resp.headers.items()}
     except Exception as exc:
         result.error = str(exc)
         return result
@@ -426,5 +549,25 @@ def audit(url: str, check_nav_links: bool = False) -> AuditResult:
     # We skip automated Google search to avoid bot detection.
     # Mark as False by default; manual verification covers this.
     result.signals["not_indexed"] = False
+
+    # Step 14: Extract contact email from page
+    result.raw["email"] = extract_email(html)
+
+    # Step 15: Security headers
+    sec_headers = check_security_headers(final_url)
+    result.signals.update(sec_headers)
+
+    # Step 16: Mixed content
+    result.signals["mixed_content"] = check_mixed_content(html, final_url)
+
+    # Step 16: Exposed sensitive paths
+    exp_signal, exp_paths = check_exposed_sensitive_paths(final_url)
+    result.signals["exposed_sensitive_path"] = exp_signal
+    result.raw["exposed_paths"] = exp_paths
+
+    # Step 17: CMS / tech version exposed
+    cms_signal, cms_version = check_cms_version_exposed(html, resp_headers)
+    result.signals["cms_version_exposed"] = cms_signal
+    result.raw["cms_version"] = cms_version
 
     return result

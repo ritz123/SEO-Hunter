@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --accent: #1e40af;
+  --accent-hover: #1e3a8a;
+  --cta: #d97706;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f8fafc;
+  color: #1e3a8a;
+}
+
+/* ── Leaflet fixes inside React ─────── */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  font-family: inherit;
+}
+
+/* ── Custom map pin ─────────────────── */
+.map-pin-wrapper { position: relative; }
+.map-pin-pulse {
+  position: absolute;
+  top: -4px; left: -4px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: pulse 1.8s ease-out infinite;
+}
+@keyframes pulse {
+  0%   { transform: scale(0.6); opacity: 0.4; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+
+/* ── Scrollbar ──────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ── Progress bar ───────────────────── */
+@keyframes indeterminate {
+  0%   { left: -40%; width: 40%; }
+  100% { left: 100%; width: 40%; }
+}
+.progress-indeterminate {
+  position: relative;
+  overflow: hidden;
+}
+.progress-indeterminate::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: rgba(255,255,255,0.5);
+  animation: indeterminate 1.4s ease-in-out infinite;
+}

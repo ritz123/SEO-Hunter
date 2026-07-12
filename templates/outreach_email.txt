@@ -1,0 +1,127 @@
+============================================================
+  OUTREACH EMAIL TEMPLATES — Stage 5
+  (Personalise fields in [BRACKETS] before sending)
+============================================================
+
+────────────────────────────────────────────────────────────
+TEMPLATE 1 — Cold email: Google visibility angle (Primary)
+────────────────────────────────────────────────────────────
+
+Subject: [Business Name] isn't showing up for "[service] in [City]"
+
+Hi [Owner First Name],
+
+I was searching for [service type] in [City] and noticed that [Business Name]
+doesn't appear in the top results — even though your Google Business Profile
+is active and has [X] reviews.
+
+The most common cause is a technical issue on the website that prevents Google
+from properly indexing and ranking it.
+
+I put together a quick 3-point audit of [domain.com] and found:
+
+  1. [Top Issue 1 — e.g. "The site isn't mobile-friendly (no viewport tag)"]
+  2. [Top Issue 2 — e.g. "SSL certificate is flagged as untrusted"]
+  3. [Top Issue 3 — e.g. "Page load speed scores 31/100 on Google's own tool"]
+
+These are exactly the signals Google uses to decide where to rank a business.
+I'd be happy to share the full report at no cost — would that be useful?
+
+Best,
+[Your Name]
+[Your Title] | [Your Agency / Freelance Name]
+[Phone] | [Email] | [Your Website]
+
+────────────────────────────────────────────────────────────
+TEMPLATE 2 — Follow-up (3–5 days after no reply)
+────────────────────────────────────────────────────────────
+
+Subject: Re: [Business Name] — quick follow-up
+
+Hi [Owner First Name],
+
+Just circling back on my previous note. I know running a [business type] keeps
+you busy, so I'll keep this short.
+
+A competitor of yours — [Competitor Name, same city] — recently updated their
+site and jumped from page 3 to position 2 for "[service] in [City]". The changes
+they made took less than two weeks.
+
+I think [Business Name] has the same opportunity. Happy to walk you through
+the audit in a 15-minute call, no pressure.
+
+[Calendly / booking link or phone number]
+
+Best,
+[Your Name]
+
+────────────────────────────────────────────────────────────
+TEMPLATE 3 — LinkedIn DM (short form)
+────────────────────────────────────────────────────────────
+
+Hi [First Name],
+
+I ran a quick SEO audit on [domain.com] and flagged a few issues that are
+likely suppressing your Google visibility in [City]. Happy to share the
+findings — takes 2 minutes to look over. Would that be OK?
+
+────────────────────────────────────────────────────────────
+TEMPLATE 4 — High-urgency (broken website link on GBP)
+────────────────────────────────────────────────────────────
+
+Subject: [Business Name] — your website link on Google is broken
+
+Hi [Owner First Name],
+
+I noticed your Google Business Profile links to [broken URL], which currently
+returns a "[error, e.g. 404 / blank page]". Anyone who clicks "Website" from
+your Google listing hits a dead end — this affects both your reputation and
+your search ranking.
+
+The fix is usually straightforward. I can walk you through it in under 10
+minutes, or handle it for you entirely.
+
+Are you available for a quick call this week?
+
+[Your Name]
+[Phone]
+
+============================================================
+PERSONALISATION CHECKLIST (fill in before sending)
+============================================================
+
+  [ ] Replace [Business Name] with exact GBP listing name
+  [ ] Replace [Owner First Name] with verified first name
+      (check GBP reviews signed by owner, LinkedIn, or website bio)
+  [ ] Insert the correct [City] and [service type]
+  [ ] Paste in the top 3 issues from the audit CSV
+      (columns: top_issue_1, top_issue_2, top_issue_3)
+  [ ] Mention a real local competitor who ranks above them
+  [ ] Add your Calendly or scheduling link
+  [ ] Attach or link to the one-page PDF audit comparison
+
+============================================================
+ONE-PAGE PDF AUDIT COMPARISON — recommended structure
+============================================================
+
+Page 1 layout:
+
+  LEFT COLUMN ("Your Site — [Business Name]")
+    • PageSpeed score: [X]/100
+    • Mobile-friendly: ✗ / ✓
+    • HTTPS: ✗ / ✓
+    • Indexed pages: [N]
+    • Last updated: [date from Wayback]
+    • Overall audit score: [X] pts
+
+  RIGHT COLUMN ("Top-Ranking Competitor — [Competitor Name]")
+    • PageSpeed score: [X]/100
+    • Mobile-friendly: ✓
+    • HTTPS: ✓
+    • Indexed pages: [N]
+    • Last updated: [date]
+    • Overall audit score: [X] pts
+
+  BOTTOM: 3-step recommendation with rough time/cost estimate.
+
+============================================================

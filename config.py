@@ -13,16 +13,10 @@ load_dotenv()
 GOOGLE_PSI_API_KEY = os.getenv("GOOGLE_PSI_API_KEY", "")
 
 # No Google Maps key required — map uses Leaflet + OpenStreetMap
-# Business discovery uses Apify (optional) → OSM Overpass → Yellow Pages
+# Business discovery uses OSM Overpass → Yellow Pages → Yelp
 
 YELP_API_KEY = os.getenv("YELP_API_KEY", "")
 OUTSCRAPER_API_KEY = os.getenv("OUTSCRAPER_API_KEY", "")
-
-# ── Apify ─────────────────────────────────────────────────────────────────────
-APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN", "")
-# The Google Maps Scraper actor — well-maintained community actor
-APIFY_ACTOR_ID = os.getenv("APIFY_ACTOR_ID", "compass/google-maps-scraper")
-APIFY_MAX_ITEMS = int(os.getenv("APIFY_MAX_ITEMS", "100"))
 
 # ── Database ──────────────────────────────────────────────────────────────────
 DB_URL = os.getenv("DATABASE_URL", "sqlite:///sitecp.db")
@@ -73,23 +67,38 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 # Add/adjust weights here without touching auditor logic.
 
 SCORING_WEIGHTS: dict[str, tuple[int, str]] = {
+    # ── Reachability & HTTPS ──────────────────────────────────────────────────
     "broken_home_page":         (5, "Home page is unreachable (5xx / timeout / DNS failure)"),
     "no_https":                 (3, "Site does not use HTTPS"),
+    "ssl_invalid_or_expired":   (3, "SSL certificate is invalid, self-signed, or expired"),
+    # ── Security headers ─────────────────────────────────────────────────────
+    "missing_hsts":             (2, "No HSTS header — vulnerable to SSL-stripping attacks"),
+    "missing_xframe":           (2, "No X-Frame-Options header — clickjacking risk"),
+    "missing_csp":              (1, "No Content-Security-Policy header — XSS risk"),
+    "missing_xcto":             (1, "No X-Content-Type-Options: nosniff — MIME-sniffing risk"),
+    "missing_referrer_policy":  (1, "No Referrer-Policy header — leaks referrer information"),
+    # ── Security hygiene ─────────────────────────────────────────────────────
+    "exposed_sensitive_path":   (4, "Sensitive file/path is publicly accessible (/.env, /.git, etc.)"),
+    "mixed_content":            (2, "HTTP resources loaded on HTTPS page (mixed content)"),
+    "cms_version_exposed":      (1, "CMS or server version exposed in source / headers"),
+    # ── Mobile & performance ──────────────────────────────────────────────────
     "fails_mobile_friendly":    (3, "Site fails Google mobile-friendly criteria"),
+    "no_meta_viewport":         (2, "No meta viewport tag (not mobile-optimised)"),
     "pagespeed_score_low":      (2, "PageSpeed score below 50"),
-    "copyright_year_old":       (2, "Footer copyright year is 2+ years behind current year"),
-    "wayback_stale":            (2, "Last Wayback Machine snapshot is 2+ years old"),
-    "no_structured_data":       (1, "No JSON-LD or Microdata structured data found"),
+    # ── SEO basics ────────────────────────────────────────────────────────────
     "missing_meta_description": (1, "Meta description tag is absent"),
     "missing_title":            (1, "Title tag is absent or empty"),
+    "no_structured_data":       (1, "No JSON-LD or Microdata structured data found"),
+    "not_indexed":              (2, "Google site: query returns zero results (not indexed)"),
+    # ── Content freshness ────────────────────────────────────────────────────
+    "copyright_year_old":       (2, "Footer copyright year is 2+ years behind current year"),
+    "wayback_stale":            (2, "Last Wayback Machine snapshot is 2+ years old"),
+    "stale_blog":               (1, "Most recent blog/news post is older than 2 years"),
+    # ── Technical ────────────────────────────────────────────────────────────
     "deprecated_tech":          (2, "Uses deprecated technology (Flash, Frames, old jQuery)"),
-    "no_meta_viewport":         (2, "No meta viewport tag (not mobile-optimised)"),
     "broken_nav_links":         (2, "One or more main navigation links return errors"),
     "no_social_links":          (1, "No social media links found on the page"),
     "no_cta":                   (1, "No call-to-action buttons or contact forms detected"),
-    "ssl_invalid_or_expired":   (3, "SSL certificate is invalid, self-signed, or expired"),
-    "not_indexed":              (2, "Google site: query returns zero results (not indexed)"),
-    "stale_blog":               (1, "Most recent blog/news post is older than 2 years"),
 }
 
 # ── Priority tiers ────────────────────────────────────────────────────────────
