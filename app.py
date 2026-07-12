@@ -45,6 +45,7 @@ from src.database import (
     AuditHistory,
     AuditResult,
     Business,
+    Category,
     Locality,
     ScrapeJob,
     SessionLocal,
@@ -84,7 +85,28 @@ if STATIC_DIR.exists():
 @app.on_event("startup")
 def startup() -> None:
     init_db()
+    _seed_categories()
     _backfill_audit_history()
+
+
+def _seed_categories() -> None:
+    """Populate the categories table with defaults if it is empty."""
+    defaults = [
+        "restaurants", "cafes", "hotels", "bakeries", "gyms", "salons",
+        "pharmacies", "dentists", "plumbers", "electricians", "lawyers",
+        "accountants", "auto repair", "real estate", "florists",
+        "optometrists", "chiropractors", "hvac", "funeral homes",
+        "hardware stores", "supermarkets", "clothing", "doctors",
+        "food delivery", "education", "banking", "insurance",
+    ]
+    db = SessionLocal()
+    try:
+        if db.query(Category).count() == 0:
+            for name in defaults:
+                db.add(Category(name=name, is_default=True))
+            db.commit()
+    finally:
+        db.close()
 
 
 def _backfill_audit_history() -> None:
@@ -370,6 +392,40 @@ def get_config():
         "default_city": config.TARGET_CITY,
         "default_verticals": config.DEFAULT_VERTICALS[:8],
     }
+
+
+# ── Category management ────────────────────────────────────────────────────────
+
+class CategoryCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128)
+
+
+@app.get("/api/categories")
+def list_categories(db: Session = Depends(get_db)):
+    cats = db.query(Category).order_by(Category.is_default.desc(), Category.name).all()
+    return {"categories": [c.to_dict() for c in cats]}
+
+
+@app.post("/api/categories", status_code=201)
+def create_category(body: CategoryCreate, db: Session = Depends(get_db)):
+    name = body.name.strip().lower()
+    existing = db.query(Category).filter_by(name=name).first()
+    if existing:
+        raise HTTPException(409, f"Category '{name}' already exists")
+    cat = Category(name=name, is_default=False)
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat.to_dict()
+
+
+@app.delete("/api/categories/{category_id}", status_code=204)
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    cat = db.query(Category).get(category_id)
+    if not cat:
+        raise HTTPException(404, "Category not found")
+    db.delete(cat)
+    db.commit()
 
 
 # ── Nominatim geocoding endpoints ─────────────────────────────────────────────

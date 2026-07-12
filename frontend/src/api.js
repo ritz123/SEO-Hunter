@@ -67,3 +67,15 @@ export function geocodeSuggest(q) {
 export function geocodeReverse(lat, lng) {
   return api.get(`/api/geocode/reverse?lat=${lat}&lng=${lng}`);
 }
+
+export function fetchCategories() {
+  return api.get('/api/categories');
+}
+
+export function createCategory(name) {
+  return api.post('/api/categories', { name });
+}
+
+export function deleteCategory(id) {
+  return fetch(`/api/categories/${id}`, { method: 'DELETE' });
+}

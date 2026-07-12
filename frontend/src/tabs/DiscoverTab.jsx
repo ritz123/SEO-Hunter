@@ -6,10 +6,12 @@ import L from 'leaflet';
 import {
   Search, ChevronDown, ChevronUp, Loader2, CheckCircle2,
   AlertTriangle, MapPin, RefreshCw, Trash2, RotateCcw,
+  Plus, X, Settings2,
 } from 'lucide-react';
 import {
   geocode, geocodeSuggest, geocodeReverse,
   startSearch, fetchLocalities, deleteLocality,
+  fetchCategories, createCategory, deleteCategory,
 } from '../api';
 import { toast } from '../components/ui/Toast';
 import PriorityBadge from '../components/ui/PriorityBadge';
@@ -48,11 +50,6 @@ function MapClickHandler({ onMapClick }) {
   return null;
 }
 
-const CATEGORIES = [
-  'restaurant','cafe','hotel','bakery','gym','salon','pharmacy',
-  'dentist','plumber','electrician','lawyer','accountant',
-  'florist','auto repair','real estate','clothing','supermarket',
-];
 
 const STATUS_STEPS = ['pending','scraping','auditing','done','error'];
 
@@ -107,6 +104,9 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
   const [suggests,  setSuggests]  = useState([]);
   const [sugTimer,  setSugTimer]  = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [catManage,  setCatManage]  = useState(false);
+  const [newCatName, setNewCatName] = useState('');
 
   // Map
   const mapRef                    = useRef(null);
@@ -121,7 +121,28 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
 
   useEffect(() => {
     fetchLocalities().then(setLocs).catch(() => {});
+    fetchCategories().then(r => setCategories(r.categories || [])).catch(() => {});
   }, []);
+
+  async function handleAddCategory(e) {
+    e.preventDefault();
+    const name = newCatName.trim();
+    if (!name) return;
+    try {
+      const cat = await createCategory(name);
+      setCategories(prev => [...prev, cat].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewCatName('');
+      toast(`Category "${cat.name}" added`, 'success');
+    } catch (err) {
+      toast(err.message || 'Already exists', 'error');
+    }
+  }
+
+  async function handleDeleteCategory(id, name) {
+    await deleteCategory(id);
+    setCategories(prev => prev.filter(c => c.id !== id));
+    toast(`"${name}" removed`, 'info');
+  }
 
   // ── Nominatim autocomplete ────────────────────────────────────────────────
   function onLocationInput(val) {
@@ -276,19 +297,86 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
 
               {/* Category */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
-                  Business Category
-                </label>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="w-full text-xs px-2 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All categories</option>
-                  {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                    Business Category
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCatManage(v => !v)}
+                    className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
+                      catManage ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:text-blue-600'
+                    }`}
+                    title="Manage categories"
+                  >
+                    <Settings2 size={10} /> Manage
+                  </button>
+                </div>
+
+                {/* Combobox with datalist */}
+                <div className="flex gap-1.5">
+                  <input
+                    list="cat-datalist"
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    placeholder="Type or pick a category…"
+                    className="flex-1 text-xs px-2 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <datalist id="cat-datalist">
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
+                </div>
+
+                {/* Manage panel */}
+                {catManage && (
+                  <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-2.5 space-y-2">
+                    {/* Add new category */}
+                    <form onSubmit={handleAddCategory} className="flex gap-1.5">
+                      <input
+                        value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        placeholder="New category name…"
+                        className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newCatName.trim()}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-800 text-white text-xs font-semibold hover:bg-blue-900 disabled:opacity-50 transition-colors"
+                      >
+                        <Plus size={11} /> Add
+                      </button>
+                    </form>
+
+                    {/* Category list */}
+                    <div className="max-h-36 overflow-y-auto space-y-1">
+                      {categories.map(c => (
+                        <div key={c.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white border border-gray-100 hover:border-gray-200 group">
+                          <span
+                            className="text-xs text-gray-700 cursor-pointer hover:text-blue-700 flex-1"
+                            onClick={() => { setCategory(c.name); setCatManage(false); }}
+                          >
+                            {c.name}
+                          </span>
+                          {c.is_default
+                            ? <span className="text-[9px] text-gray-300 font-medium mr-1">default</span>
+                            : (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCategory(c.id, c.name)}
+                                className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-400 hover:text-red-500 transition-all"
+                                title="Remove category"
+                              >
+                                <X size={11} />
+                              </button>
+                            )
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Radius */}
