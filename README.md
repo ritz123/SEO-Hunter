@@ -1,199 +1,159 @@
-# siteCp — Local Business Outdated Website Finder
+# SEO Hunter
 
-A Python CLI tool that implements a 6-stage SEO strategy for discovering local
-business establishments with outdated websites and building a qualified outreach
-prospect pipeline.
+A web-based tool for discovering local businesses with outdated or insecure websites, auditing them automatically, and building a qualified outreach pipeline.
 
-## Architecture
+Built with **FastAPI** (Python backend), **React + Tailwind CSS** (frontend), **SQLite** (database), and **OpenStreetMap / Overpass API** (free, no API keys required).
 
-```
-Stage 2: Prospect  →  Stage 3: Audit  →  Stage 4: Verify  →  Stage 5: Outreach
-   (URLs)               (Score)           (Checklist)         (Templates)
-                                                ↑
-                                         Stage 6: Monitor (continuous)
-```
+---
+
+## Features
+
+- **Discover** — search for businesses by category and location using OpenStreetMap (Overpass API + Nominatim geocoding). Click on the map to set a search area.
+- **Audit** — automated SEO and security audit covering 25+ signals per website.
+- **Browse Clients** — priority-sorted card view of all audited businesses with contact completeness indicators.
+- **Database** — searchable, sortable, paginated table of all records with CSV export.
+- **Audit Reports** — detailed per-business report with categorised signal checklist, security findings, and a printable PDF-ready download.
+- **Category Management** — add custom business categories and define synonyms/aliases (e.g. "realty" → also searches "real estate", "property", "estate agent").
+- **Audit History** — every audit is stored; track a site's SEO health over time.
+- **Contact Info** — phone, email (extracted from website), address, and geo-tag tracked per business with completeness indicators.
+
+---
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Install Python dependencies
 
 ```bash
 uv sync
 ```
 
-That's it — `uv` creates the virtual environment and installs all dependencies
-from `uv.lock` automatically. No `pip`, no manual venv setup.
+`uv` creates the virtual environment and installs all packages from `uv.lock` automatically.
 
-### 2. Configure API keys
+### 2. Install frontend dependencies (first time only)
+
+```bash
+cd frontend && npm install && cd ..
+```
+
+### 3. Configure (optional)
 
 ```bash
 cp .env.example .env
-# Edit .env and add your API keys (see API Keys section below)
+# Edit .env if you want to set a default city, PageSpeed API key, etc.
 ```
 
-### 3. Audit a single site immediately
+### 4. Start the server
 
 ```bash
-uv run python main.py check https://example-plumbing-company.com
+./run.sh
 ```
 
-### 4. Run the full weekly pipeline
+This builds the React frontend and starts the FastAPI server at **http://localhost:8000**.
+
+**Other modes:**
 
 ```bash
-uv run python main.py pipeline --city "Austin" --state TX --verticals "plumbers,dentists,HVAC"
-```
-
-This runs Stages 2, 3, and 4 in sequence and writes three output files to `output/`:
-- `prospects_<timestamp>.csv` — full results, all tiers
-- `prospects_priorityA_<timestamp>.csv` — Priority A only (highest urgency)
-- `verification_checklist_<timestamp>.csv` — Stage 4 manual check template
-
----
-
-## Commands
-
-### `check` — Audit a single URL
-
-```bash
-python main.py check https://domain.com
-```
-
-Prints a detailed breakdown of all signals and their scores.
-
----
-
-### `prospect` — Stage 2: discover business URLs
-
-```bash
-uv run python main.py prospect \
-  --city "Portland" \
-  --state OR \
-  --verticals "chiropractors,optometrists" \
-  --sources "yelp,yellow_pages" \
-  --max-results 50
-```
-
-Exports a `leads_<timestamp>.csv` to `output/`. Pass this file to `audit`.
-
----
-
-### `audit` — Stage 3: audit a URL list
-
-```bash
-# From a CSV produced by prospect:
-uv run python main.py audit output/leads_20260712.csv --priority A --top 30
-
-# From a plain-text file (one URL per line):
-uv run python main.py audit urls.txt
-
-# Single URL:
-uv run python main.py audit --url https://domain.com
-```
-
-Options:
-- `--priority A|B|C` — export only that tier to CSV
-- `--check-nav` — also check navigation links (slower, ~+5s per site)
-- `--top N` — show top N results in the console table
-
----
-
-### `pipeline` — Stages 2+3+4 in one shot
-
-```bash
-uv run python main.py pipeline \
-  --city "Denver" \
-  --state CO \
-  --verticals "plumbers,electricians,HVAC" \
-  --max-results 30 \
-  --check-nav
-```
-
-The recommended weekly workflow command.
-
----
-
-### `verify` — Stage 4: export verification checklist
-
-```bash
-uv run python main.py verify output/prospects_20260712.csv --top 50
-```
-
-Generates a `verification_checklist_<timestamp>.csv` with pre-filled audit
-data and blank columns for manual spot-checks (mobile rendering, indexation,
-GBP URL match, decision maker name).
-
----
-
-### `monitor` — Stage 6: continuous monitoring
-
-```bash
-# Run once and exit:
-uv run python main.py monitor --city "Seattle" --once
-
-# Run every 24 hours (blocking, Ctrl+C to stop):
-uv run python main.py monitor --city "Seattle" --interval 24
-
-# Include Google Alert RSS feeds:
-uv run python main.py monitor \
-  --city "Seattle" \
-  --alert-feeds "https://www.google.com/alerts/feeds/...,https://..."
-```
-
-Compares current prospecting results against a saved snapshot to surface
-**only new businesses** since the last check. Writes a digest file to `output/`.
-
----
-
-### `templates` — Stage 5: outreach templates
-
-```bash
-uv run python main.py templates --type email   # Cold email templates
-uv run python main.py templates --type call    # Cold call script + walk-in guide
+./run.sh --no-build     # Skip React build (use existing static/ output)
+./run.sh --dev          # Vite HMR on :5173 + API on :8000 (development)
+./run.sh --port 8080    # Custom port
+./run.sh --no-reload    # Disable uvicorn auto-reload
 ```
 
 ---
 
-## API Keys
+## Using the Web App
 
-| Key | Required? | Where to get it |
-|---|---|---|
-| `GOOGLE_PSI_API_KEY` | Recommended | [PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started) — free |
-| `GOOGLE_MAPS_API_KEY` | Optional | [Google Cloud Console](https://console.cloud.google.com/) — Places API |
-| `YELP_API_KEY` | Optional | [Yelp Fusion](https://www.yelp.com/developers) — free tier |
-| `OUTSCRAPER_API_KEY` | Optional | [Outscraper](https://outscraper.com/) — paid |
+### Discover tab
 
-Without any API keys, the tool still works using:
-- Yellow Pages scraping
-- Wayback Machine CDX API (free, no key)
-- HTML-based signal detection (viewport, meta tags, copyright year, etc.)
+1. Type a city or neighbourhood — Nominatim autocomplete will suggest locations.
+2. Or click anywhere on the map to drop a pin.
+3. Choose a business category (type freely or pick from the list).
+4. Set the search radius and hit **Search & Audit**.
+5. The job runs in the background — progress is shown in the header regardless of which tab you switch to.
 
-PageSpeed scores will show as `-1` (not checked) without `GOOGLE_PSI_API_KEY`.
+### Clients tab
+
+- Businesses are sorted by priority: **A** (most outdated) → **B** → **C**.
+- Filter chips: Priority A/B/C, No Website, No Contact Info.
+- Each card shows contact completeness dots: Phone · Email · Address · Geo-tag.
+- Click any card to open the full audit report.
+
+### Audit Report modal
+
+- **Latest Report** — score ring, priority badge, top issues, full signal checklist grouped by category.
+- **Business Info** — contact details, geo-tag with inline Leaflet map, links to Google Business / Yelp.
+- **History** — every past audit with score and issue count.
+- **Download Report** — generates a printable HTML report (opens in new tab, auto-triggers print dialog).
+- **Re-audit Now** — re-runs the full audit and updates the database.
+
+### Database tab
+
+- Searchable, sortable table of all businesses.
+- Filter by priority, website presence, or contact completeness.
+- Export to CSV.
+
+### Managing categories
+
+In the Discover tab, click **Manage** next to the category field to:
+- Add custom business categories.
+- Define **aliases/synonyms** per category (e.g. `realty, property, estate agent` for "real estate") — all are searched simultaneously.
+- Remove custom categories (default categories cannot be deleted).
 
 ---
 
-## Scoring Model
+## Audit Signals
+
+### Security & HTTPS (high weight)
 
 | Signal | Points |
 |---|---|
-| Home page unreachable | 5 |
+| Exposed sensitive path (/.env, /.git, phpinfo.php…) | 4 |
+| Home page unreachable (5xx / timeout / DNS) | 5 |
 | No HTTPS | 3 |
-| Fails mobile-friendly test | 3 |
 | SSL invalid or expired | 3 |
-| PageSpeed score < 50 | 2 |
-| Copyright year 2+ years old | 2 |
-| Wayback snapshot 2+ years old | 2 |
-| Deprecated tech (Flash, frames) | 2 |
+| No HSTS header | 2 |
+| No X-Frame-Options (clickjacking risk) | 2 |
+| Mixed content (HTTP resources on HTTPS page) | 2 |
+| No Content-Security-Policy | 1 |
+| No X-Content-Type-Options | 1 |
+| No Referrer-Policy | 1 |
+| CMS / server version exposed | 1 |
+
+### Mobile & Performance
+
+| Signal | Points |
+|---|---|
+| Fails mobile-friendly test (no viewport) | 3 |
 | No meta viewport tag | 2 |
-| Broken navigation links | 2 |
+| PageSpeed score < 50 | 2 |
+
+### SEO Basics
+
+| Signal | Points |
+|---|---|
 | Not indexed on Google | 2 |
-| No structured data | 1 |
-| Missing meta description | 1 |
 | Missing title tag | 1 |
+| Missing meta description | 1 |
+| No structured data (JSON-LD / Microdata) | 1 |
+
+### Content Freshness
+
+| Signal | Points |
+|---|---|
+| Copyright year 2+ years old | 2 |
+| Wayback Machine snapshot 2+ years old | 2 |
+| Stale blog (most recent post 2+ years old) | 1 |
+
+### Technical
+
+| Signal | Points |
+|---|---|
+| Deprecated tech (Flash, frames, old jQuery) | 2 |
+| Broken navigation links | 2 |
 | No social media links | 1 |
 | No call-to-action / contact form | 1 |
-| Stale blog (2+ years old) | 1 |
 
-**Priority A** (score ≥ 8): act first — high outreach urgency  
+**Priority A** (score ≥ 8): act first — highest outreach urgency  
 **Priority B** (score 5–7): secondary pipeline  
 **Priority C** (score < 5): lower priority  
 
@@ -201,62 +161,123 @@ Thresholds are configurable in `.env` via `PRIORITY_A_THRESHOLD` and `PRIORITY_B
 
 ---
 
-## Output Files
+## API Keys
 
-All outputs are written to the `output/` directory.
+No API keys are required to run SEO Hunter. All discovery and geocoding uses free, open services.
 
-| File | Contents |
-|---|---|
-| `leads_<ts>.csv` | Raw business leads from prospecting |
-| `prospects_<ts>.csv` | Fully audited and scored results |
-| `prospects_priorityA_<ts>.csv` | Priority A prospects only |
-| `verification_checklist_<ts>.csv` | Stage 4 manual check template |
-| `digest_<ts>.txt` | Monitoring digest (new businesses found) |
-| `snapshots/default.json` | Monitoring state snapshot |
+| Key | Purpose | Where to get it |
+|---|---|---|
+| `GOOGLE_PSI_API_KEY` | PageSpeed scores (optional) | [PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started) — free quota |
+| `YELP_API_KEY` | Yelp fallback prospecting (optional) | [Yelp Fusion](https://www.yelp.com/developers) |
+
+Without keys, the auditor skips PageSpeed checks (score shows as `-1`) and uses OSM Overpass → Yellow Pages for discovery.
 
 ---
 
-## Workflow: Weekly Prospect Pipeline
+## Data Sources
 
-```
-Week 1  Select 2-3 verticals and a city
-        → Edit TARGET_VERTICALS and TARGET_CITY in .env
-
-Week 2  uv run python main.py pipeline --city "..." --verticals "..."
-        → Produces scored CSV with 200-500 URLs audited
-
-Week 3  Open verification_checklist_*.csv in Google Sheets
-        → Manually spot-check top 50 prospects (5 checks each)
-        → Fill in decision maker name and confirm priority tier
-
-Week 4  Use outreach_email.txt and cold_call_script.txt templates
-        → Contact Priority A prospects (20-30 businesses)
-        → Goal: 5-10 conversations
-
-Ongoing uv run python main.py monitor --city "..." --interval 24
-        → Surfaces new businesses automatically
-```
+| Source | Used for | Cost |
+|---|---|---|
+| [Overpass API](https://overpass-api.de) | Business discovery from OpenStreetMap | Free |
+| [Nominatim](https://nominatim.openstreetmap.org) | City → lat/lng geocoding | Free |
+| [OpenStreetMap](https://openstreetmap.org) | Map tiles (Leaflet) | Free |
+| [Wayback Machine CDX API](https://archive.org/help/wayback_api.php) | Last snapshot date | Free |
+| Yellow Pages | Fallback business prospecting | Free (scraped) |
 
 ---
 
 ## Project Structure
 
 ```
-siteCp/
-├── main.py                    # CLI entry point (all commands)
-├── config.py                  # Settings, scoring weights, API endpoints
-├── pyproject.toml             # Project metadata and dependencies (uv)
-├── uv.lock                    # Locked dependency graph
-├── .env.example               # API key template
+seo-hunter/
+├── app.py                     # FastAPI backend — all REST API endpoints
+├── config.py                  # Scoring weights, thresholds, API config
+├── main.py                    # Legacy CLI entry point (kept for single-site checks)
+├── pyproject.toml             # Python dependencies (managed by uv)
+├── run.sh                     # Start script (build + serve)
+├── .env.example               # Environment variable template
+├── sitecp.db                  # SQLite database (auto-created on first run)
+│
 ├── src/
-│   ├── __init__.py
-│   ├── auditor.py             # Signal checkers (technical, SEO, content)
-│   ├── prospector.py          # Business URL discovery (Yelp, GMaps, YP, CSV)
-│   ├── scorer.py              # Scoring model + priority tiers
-│   ├── exporter.py            # CSV export + console table
-│   └── monitor.py             # Continuous monitoring + scheduling
-├── templates/
-│   ├── outreach_email.txt     # Cold email templates (4 variants)
-│   └── cold_call_script.txt   # Phone + walk-in scripts
-└── output/                    # Generated CSV/digest files (git-ignored)
+│   ├── auditor.py             # 25+ signal checkers (SEO, security, content, mobile)
+│   ├── scorer.py              # Scoring model + priority tier assignment
+│   ├── database.py            # SQLAlchemy models (Business, AuditResult, Category…)
+│   ├── osm_prospector.py      # Overpass API + Nominatim geocoding + 100+ OSM synonyms
+│   ├── prospector.py          # Yellow Pages + Yelp fallback scrapers
+│   └── monitor.py             # Continuous monitoring (legacy CLI)
+│
+├── frontend/                  # React + Vite + Tailwind CSS v4
+│   ├── src/
+│   │   ├── App.jsx            # App shell, tab navigation, global job state
+│   │   ├── api.js             # Fetch wrappers for all API endpoints
+│   │   ├── tabs/
+│   │   │   ├── ClientsTab.jsx     # Priority-sorted client cards
+│   │   │   ├── DatabaseTab.jsx    # Full searchable/sortable table
+│   │   │   └── DiscoverTab.jsx    # Map search + category management
+│   │   └── components/ui/
+│   │       ├── AuditReportModal.jsx   # Full audit report with inline map
+│   │       ├── PriorityBadge.jsx
+│   │       └── Toast.jsx
+│   └── vite.config.js
+│
+├── static/                    # Built React output (served by FastAPI)
+└── templates/
+    ├── outreach_email.txt     # Cold email templates
+    └── cold_call_script.txt   # Phone + walk-in scripts
 ```
+
+---
+
+## Database Schema
+
+The SQLite database (`sitecp.db`) is created automatically on first run.
+
+| Table | Purpose |
+|---|---|
+| `localities` | Searched areas (city, lat/lng, radius, category) |
+| `businesses` | Discovered businesses (name, website, phone, email, address, geo-tag…) |
+| `audit_results` | Latest audit result per business (score, priority, signals JSON, raw metadata) |
+| `audit_history` | Append-only audit log — full history per business |
+| `scrape_jobs` | Background job tracking (status, progress counts) |
+| `categories` | User-managed category list with aliases/synonyms |
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and customise as needed.
+
+```bash
+# Optional API keys
+GOOGLE_PSI_API_KEY=        # PageSpeed Insights (leave blank to skip)
+YELP_API_KEY=              # Yelp Fusion (fallback prospecting)
+
+# Prospecting defaults
+TARGET_CITY="Bangalore"
+TARGET_STATE="Karnataka"
+TARGET_VERTICALS="restaurants,dentists,plumbers,..."
+MAX_RESULTS_PER_SOURCE=50
+
+# Scoring thresholds
+PRIORITY_A_THRESHOLD=8
+PRIORITY_B_THRESHOLD=5
+
+# Server
+WEB_HOST=0.0.0.0
+WEB_PORT=8000
+
+# HTTP behaviour
+REQUEST_TIMEOUT=15
+REQUEST_DELAY=1.5
+```
+
+---
+
+## Outreach Templates
+
+Pre-written templates are in `templates/`:
+
+- **`outreach_email.txt`** — cold email variants for Priority A and B prospects
+- **`cold_call_script.txt`** — phone call script and walk-in guide
+
+Fill in the `[PLACEHOLDERS]` from the audit report before sending.

@@ -79,3 +79,7 @@ export function createCategory(name) {
 export function deleteCategory(id) {
   return fetch(`/api/categories/${id}`, { method: 'DELETE' });
 }
+
+export function updateCategoryAliases(id, aliases) {
+  return api.put(`/api/categories/${id}`, { aliases });
+}

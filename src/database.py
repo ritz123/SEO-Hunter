@@ -232,13 +232,18 @@ class Category(Base):
 
     id         = Column(Integer, primary_key=True, index=True)
     name       = Column(String(128), nullable=False, unique=True)
+    aliases    = Column(Text, nullable=True)   # JSON list of synonym strings
     is_default = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    def aliases_list(self) -> list[str]:
+        return json.loads(self.aliases) if self.aliases else []
 
     def to_dict(self) -> dict:
         return {
             "id":         self.id,
             "name":       self.name,
+            "aliases":    self.aliases_list(),
             "is_default": self.is_default,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

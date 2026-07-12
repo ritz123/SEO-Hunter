@@ -11,7 +11,7 @@ import {
 import {
   geocode, geocodeSuggest, geocodeReverse,
   startSearch, fetchLocalities, deleteLocality,
-  fetchCategories, createCategory, deleteCategory,
+  fetchCategories, createCategory, deleteCategory, updateCategoryAliases,
 } from '../api';
 import { toast } from '../components/ui/Toast';
 import PriorityBadge from '../components/ui/PriorityBadge';
@@ -104,9 +104,11 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
   const [suggests,  setSuggests]  = useState([]);
   const [sugTimer,  setSugTimer]  = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [catManage,  setCatManage]  = useState(false);
-  const [newCatName, setNewCatName] = useState('');
+  const [categories,   setCategories]   = useState([]);
+  const [catManage,    setCatManage]    = useState(false);
+  const [newCatName,   setNewCatName]   = useState('');
+  const [editingAlias, setEditingAlias] = useState(null); // category id being edited
+  const [aliasInput,   setAliasInput]   = useState('');   // comma-separated alias text
 
   // Map
   const mapRef                    = useRef(null);
@@ -142,6 +144,23 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
     await deleteCategory(id);
     setCategories(prev => prev.filter(c => c.id !== id));
     toast(`"${name}" removed`, 'info');
+  }
+
+  function startEditAlias(cat) {
+    setEditingAlias(cat.id);
+    setAliasInput((cat.aliases || []).join(', '));
+  }
+
+  async function saveAliases(cat) {
+    const aliases = aliasInput.split(',').map(s => s.trim()).filter(Boolean);
+    try {
+      const updated = await updateCategoryAliases(cat.id, aliases);
+      setCategories(prev => prev.map(c => c.id === cat.id ? updated : c));
+      setEditingAlias(null);
+      toast(`Aliases saved for "${cat.name}"`, 'success');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   }
 
   // ── Nominatim autocomplete ────────────────────────────────────────────────
@@ -350,18 +369,31 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
                     </form>
 
                     {/* Category list */}
-                    <div className="max-h-36 overflow-y-auto space-y-1">
+                    <div className="max-h-52 overflow-y-auto space-y-1">
                       {categories.map(c => (
-                        <div key={c.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white border border-gray-100 hover:border-gray-200 group">
-                          <span
-                            className="text-xs text-gray-700 cursor-pointer hover:text-blue-700 flex-1"
-                            onClick={() => { setCategory(c.name); setCatManage(false); }}
-                          >
-                            {c.name}
-                          </span>
-                          {c.is_default
-                            ? <span className="text-[9px] text-gray-300 font-medium mr-1">default</span>
-                            : (
+                        <div key={c.id} className="rounded-lg bg-white border border-gray-100 hover:border-gray-200 group">
+                          <div className="flex items-center px-2 py-1.5">
+                            <span
+                              className="text-xs text-gray-700 cursor-pointer hover:text-blue-700 flex-1"
+                              onClick={() => { setCategory(c.name); setCatManage(false); }}
+                            >
+                              {c.name}
+                            </span>
+                            {/* Aliases summary */}
+                            {c.aliases?.length > 0 && (
+                              <span className="text-[9px] text-gray-400 mr-2 truncate max-w-[100px]">
+                                +{c.aliases.length} alias{c.aliases.length > 1 ? 'es' : ''}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => editingAlias === c.id ? setEditingAlias(null) : startEditAlias(c)}
+                              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-400 hover:text-blue-500 transition-all mr-0.5"
+                              title="Edit aliases"
+                            >
+                              <Settings2 size={10} />
+                            </button>
+                            {!c.is_default && (
                               <button
                                 type="button"
                                 onClick={() => handleDeleteCategory(c.id, c.name)}
@@ -370,8 +402,39 @@ export default function DiscoverTab({ currentJob, jobBizList, onSearchStarted })
                               >
                                 <X size={11} />
                               </button>
-                            )
-                          }
+                            )}
+                          </div>
+
+                          {/* Inline alias editor */}
+                          {editingAlias === c.id && (
+                            <div className="px-2 pb-2 pt-0.5 border-t border-gray-100 space-y-1.5">
+                              <p className="text-[10px] text-gray-400">
+                                Synonyms searched together with <strong>{c.name}</strong> (comma-separated)
+                              </p>
+                              <input
+                                value={aliasInput}
+                                onChange={e => setAliasInput(e.target.value)}
+                                placeholder="e.g. realty, property, estate agent"
+                                className="w-full text-xs px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                              <div className="flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => saveAliases(c)}
+                                  className="flex-1 text-xs py-1 rounded bg-blue-800 text-white font-semibold hover:bg-blue-900 transition-colors"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingAlias(null)}
+                                  className="px-3 text-xs py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

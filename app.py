@@ -290,16 +290,34 @@ def _run_scrape_and_audit(job_id: int, request: SearchRequest) -> None:
 
         # ── Step 1: Scrape (OSM Overpass → Yellow Pages → Yelp) ────────────
         try:
+            # Resolve category aliases from DB so synonyms are all searched
+            search_terms: list[str] = [request.category] if request.category else []
+            if request.category:
+                cat_row = (
+                    db.query(Category)
+                    .filter(Category.name == request.category.lower().strip())
+                    .first()
+                )
+                if cat_row:
+                    search_terms.extend(cat_row.aliases_list())
+
             # Priority: OSM Overpass (free) → Yellow Pages → Yelp
             osm_items: list[OSMBusiness] = []
+            seen_osm_ids: set[str] = set()
             if request.lat and request.lng:
-                osm_items = search_overpass(
-                    vertical=request.category,
-                    lat=request.lat,
-                    lng=request.lng,
-                    radius_km=request.radius_km,
-                    max_results=request.max_results,
-                )
+                for term in search_terms:
+                    items = search_overpass(
+                        vertical=term,
+                        lat=request.lat,
+                        lng=request.lng,
+                        radius_km=request.radius_km,
+                        max_results=request.max_results,
+                    )
+                    for it in items:
+                        key = it.osm_id or it.name
+                        if key not in seen_osm_ids:
+                            seen_osm_ids.add(key)
+                            osm_items.append(it)
 
             if osm_items:
                 for item in osm_items:
@@ -321,15 +339,16 @@ def _run_scrape_and_audit(job_id: int, request: SearchRequest) -> None:
                     db.commit()
                     businesses_to_audit.append(biz)
             else:
-                # Fallback to Yellow Pages → Yelp
+                # Fallback to Yellow Pages → Yelp (use primary term)
+                primary = search_terms[0] if search_terms else ""
                 leads = prospect_yellow_pages(
-                    vertical=request.category,
+                    vertical=primary,
                     city=request.locality_name,
                     max_results=request.max_results,
                 )
                 if not leads and config.YELP_API_KEY:
                     leads = prospect_yelp(
-                        vertical=request.category,
+                        vertical=primary,
                         city=request.locality_name,
                         max_results=request.max_results,
                     )
@@ -414,6 +433,22 @@ def create_category(body: CategoryCreate, db: Session = Depends(get_db)):
         raise HTTPException(409, f"Category '{name}' already exists")
     cat = Category(name=name, is_default=False)
     db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat.to_dict()
+
+
+class CategoryUpdate(BaseModel):
+    aliases: list[str] = []
+
+
+@app.put("/api/categories/{category_id}")
+def update_category(category_id: int, body: CategoryUpdate, db: Session = Depends(get_db)):
+    cat = db.query(Category).get(category_id)
+    if not cat:
+        raise HTTPException(404, "Category not found")
+    cleaned = [a.strip().lower() for a in body.aliases if a.strip()]
+    cat.aliases = json.dumps(cleaned) if cleaned else None
     db.commit()
     db.refresh(cat)
     return cat.to_dict()
