@@ -11,6 +11,13 @@
 # ─────────────────────────────────────────────────────────────────
 set -euo pipefail
 
+# ── Auto-setup: run setup.sh if dependencies are missing ─────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! bash "$SCRIPT_DIR/setup.sh" --check 2>/dev/null; then
+  echo "  Dependencies not found — running setup.sh first…"
+  bash "$SCRIPT_DIR/setup.sh"
+fi
+
 PORT=8000
 RELOAD="--reload"
 BUILD=true
@@ -54,14 +61,9 @@ if $DEV; then
 else
   # Production mode: build React, then serve with FastAPI
   if $BUILD; then
-    if [[ -d frontend/node_modules ]]; then
-      echo "  Building React frontend…"
-      cd frontend && npm run build && cd ..
-      echo "  Build complete."
-    else
-      echo "  [WARN] frontend/node_modules not found — run 'cd frontend && npm install' first"
-      echo "  Continuing with existing static/ build…"
-    fi
+    echo "  Building React frontend…"
+    cd frontend && npm run build && cd ..
+    echo "  Build complete."
   else
     echo "  Skipping React build (--no-build)"
   fi

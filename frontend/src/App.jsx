@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Users, Search, Database, Activity, Loader2 } from 'lucide-react';
+import { Users, Search, Database, Activity, Loader2, Moon, Sun } from 'lucide-react';
 import ClientsTab    from './tabs/ClientsTab';
 import DatabaseTab   from './tabs/DatabaseTab';
 import DiscoverTab   from './tabs/DiscoverTab';
@@ -34,11 +34,24 @@ const TABS = [
 function StatPill({ value, label, urgent }) {
   return (
     <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-      urgent ? 'bg-red-100 text-red-700' : 'bg-blue-800 text-blue-200'
+      urgent ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : 'bg-blue-800 text-blue-200 dark:bg-blue-950 dark:text-blue-300'
     }`}>
       <span className="font-bold">{value ?? '—'}</span>
       <span className="opacity-75">{label}</span>
     </div>
+  );
+}
+
+function ThemeToggle({ dark, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-blue-800 dark:hover:bg-blue-950 transition-colors text-xs font-medium flex-shrink-0"
+    >
+      {dark ? <Sun size={14} /> : <Moon size={14} />}
+      <span className="hidden sm:inline">{dark ? 'Light' : 'Dark'}</span>
+    </button>
   );
 }
 
@@ -47,16 +60,29 @@ export default function App() {
   const { businesses, loading, reload } = useBusinesses();
   const [stats, setStats] = useState(null);
 
+  // ── Theme ────────────────────────────────────────────────────────────────
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('seo-hunter-theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('seo-hunter-theme', dark ? 'dark' : 'light');
+  }, [dark]);
+
+  const toggleTheme = useCallback(() => setDark(d => !d), []);
+
   // ── Job state lives here so polling survives tab switches ────────────────
   const [currentJob,   setCurrentJob]   = useState(null);
-  const [jobBizList,   setJobBizList]   = useState([]);   // biz found in current job
+  const [jobBizList,   setJobBizList]   = useState([]);
   const pollRef = useRef(null);
 
   useEffect(() => {
     fetchStats().then(setStats).catch(() => {});
   }, []);
 
-  // Called by DiscoverTab when a search is started
   const handleSearchStarted = useCallback((jobId, localityId) => {
     setCurrentJob({ status: 'pending' });
     setJobBizList([]);
@@ -84,7 +110,6 @@ export default function App() {
     }, 2000);
   }, [reload]);
 
-  // Clean up on unmount (app teardown)
   useEffect(() => () => clearInterval(pollRef.current), []);
 
   const goDiscover = useCallback(() => setActiveTab('discover'), []);
@@ -92,20 +117,20 @@ export default function App() {
   const jobRunning = currentJob && !['done', 'error'].includes(currentJob.status);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="flex-shrink-0 bg-blue-900 text-white px-4 shadow-md z-30">
+      <header className="flex-shrink-0 bg-blue-900 dark:bg-gray-900 text-white px-4 shadow-md z-30 border-b border-blue-800 dark:border-gray-800">
         <div className="flex items-center h-12 gap-0">
 
           {/* Brand */}
-          <div className="flex items-center gap-2.5 pr-5 border-r border-blue-800 flex-shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-blue-700 flex items-center justify-center">
+          <div className="flex items-center gap-2.5 pr-5 border-r border-blue-800 dark:border-gray-700 flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-blue-700 dark:bg-blue-800 flex items-center justify-center">
               <Activity size={14} className="text-white" />
             </div>
             <div>
               <span className="font-bold text-sm tracking-tight">SEO Hunter</span>
-              <span className="text-[10px] text-blue-300 block leading-none">Local SEO</span>
+              <span className="text-[10px] text-blue-300 dark:text-gray-400 block leading-none">Local SEO</span>
             </div>
           </div>
 
@@ -118,12 +143,11 @@ export default function App() {
                 className={`flex items-center gap-2 px-5 h-12 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-amber-400 text-white font-semibold'
-                    : 'border-transparent text-blue-300 hover:text-white hover:border-blue-500'
+                    : 'border-transparent text-blue-300 dark:text-gray-400 hover:text-white hover:border-blue-500'
                 }`}
               >
                 {tab.icon}
                 {tab.label}
-                {/* Badge when a job is running and user is NOT on Discover tab */}
                 {tab.id === 'discover' && jobRunning && activeTab !== 'discover' && (
                   <span className="ml-0.5 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold">
                     <Loader2 size={9} className="animate-spin" />
@@ -142,6 +166,11 @@ export default function App() {
               <StatPill value={stats.localities}       label="localities" />
             </div>
           )}
+
+          {/* Theme toggle */}
+          <div className="ml-3 pl-3 border-l border-blue-800 dark:border-gray-700 flex-shrink-0">
+            <ThemeToggle dark={dark} onToggle={toggleTheme} />
+          </div>
         </div>
       </header>
 
@@ -149,17 +178,16 @@ export default function App() {
       {(() => {
         const tab = TABS.find(t => t.id === activeTab);
         return (
-          <div className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 bg-white border-b border-gray-200">
+          <div className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
             <div>
-              <h1 className="text-sm font-bold text-gray-900">{tab?.title}</h1>
-              <p className="text-[11px] text-gray-400">{tab?.desc}</p>
+              <h1 className="text-sm font-bold text-gray-900 dark:text-gray-100">{tab?.title}</h1>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">{tab?.desc}</p>
             </div>
-            {/* Global job progress indicator (visible from any tab) */}
             {currentJob && currentJob.status !== 'error' && (
               <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg ${
                 currentJob.status === 'done'
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
               }`}>
                 {currentJob.status !== 'done' && (
                   <Loader2 size={12} className="animate-spin" />
@@ -204,12 +232,13 @@ export default function App() {
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="flex-shrink-0 bg-white border-t border-gray-200 px-5 py-2 flex items-center justify-between text-[11px] text-gray-400">
+      <footer className="flex-shrink-0 bg-blue-900 dark:bg-gray-900 border-t border-blue-800 dark:border-gray-800 px-5 py-2 flex items-center justify-between text-[11px] text-blue-300 dark:text-gray-500">
         <span>
-          <span className="font-semibold text-gray-600">SEO Hunter</span>
+          <span className="font-semibold text-white dark:text-gray-400">SEO Hunter</span>
           {' '}— Find local businesses with outdated websites
         </span>
-        <span>Data: OpenStreetMap · Nominatim · Overpass API</span>
+        <span className="hidden sm:inline">Data: OpenStreetMap · Nominatim · Overpass API</span>
+        <span>© {new Date().getFullYear()} SEO Hunter. All rights reserved.</span>
       </footer>
 
       <ToastContainer />
